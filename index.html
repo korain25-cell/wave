@@ -3,28 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>귀여운 캐릭터 채팅룸</title>
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <title>실시간 다자간 멀티 채팅룸</title>
+  <!-- Firebase SDK (서버 없이 실시간 공유) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  
   <style>
     * { box-sizing: border-box; font-family: 'Gothic A1', 'Nanum Gothic', sans-serif; }
     body {
       background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 50%, #4ade80 50%, #22c55e 100%);
       margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
     }
-    .main-wrapper { display: flex; gap: 16px; width: 100%; max-width: 950px; }
+    .main-wrapper { display: flex; gap: 16px; width: 100%; max-width: 980px; }
     
     .left-panel {
-      flex: 1.1; background: #fff; border: 3px solid #000; border-radius: 16px; padding: 16px;
+      flex: 1.2; background: #fff; border: 3px solid #000; border-radius: 16px; padding: 16px;
       box-shadow: 4px 4px 0px rgba(0,0,0,0.15); display: flex; flex-direction: column;
     }
     .panel-title { font-size: 1.4rem; font-weight: 800; text-align: center; margin: 0 0 12px 0; }
     
     .preview-container { display: flex; gap: 12px; margin-bottom: 12px; }
     .big-avatar-box {
-      width: 110px; height: 110px; background: #e0f2fe; border: 3px solid #000;
+      width: 120px; height: 120px; background: #e0f2fe; border: 3px solid #000;
       border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+      position: relative;
     }
-    .big-avatar-box svg, .big-avatar-box img { width: 90px; height: 90px; object-fit: cover; }
+    .big-avatar-box svg, .big-avatar-box img { width: 100px; height: 100px; object-fit: cover; }
     
     .preview-controls { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
     .input-label { font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; }
@@ -32,14 +36,13 @@
     
     .btn-blue {
       background: #2563eb; color: white; font-weight: bold; border: 2px solid #000;
-      border-radius: 8px; padding: 10px; cursor: pointer; font-size: 0.95rem; text-align: center;
+      border-radius: 8px; padding: 8px; cursor: pointer; font-size: 0.9rem; text-align: center;
     }
     .btn-gray {
-      flex: 1; background: #64748b; color: white; border: 2px solid #000;
+      background: #64748b; color: white; border: 2px solid #000;
       border-radius: 6px; padding: 6px; font-weight: bold; cursor: pointer;
     }
     
-    .nav-btns { display: flex; gap: 6px; margin-bottom: 10px; }
     .tab-bar { display: flex; gap: 4px; margin-bottom: 8px; }
     .tab-btn {
       flex: 1; padding: 6px 2px; font-size: 0.75rem; font-weight: bold;
@@ -49,26 +52,30 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     
+    /* 커스텀 선택 메뉴들 */
+    .custom-select-group { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px; }
+    .custom-row { display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 6px 10px; border: 2px solid #000; border-radius: 8px; }
+    .custom-row label { font-size: 0.85rem; font-weight: bold; }
+    .custom-row select { padding: 4px; border: 2px solid #000; border-radius: 6px; font-weight: bold; }
+
     .grid-box {
       display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
-      background: #f0f9ff; border: 2px solid #000; border-radius: 12px; padding: 8px; max-height: 240px; overflow-y: auto;
+      background: #f0f9ff; border: 2px solid #000; border-radius: 12px; padding: 8px; max-height: 200px; overflow-y: auto;
     }
     .grid-item {
       position: relative; background: #fff; border: 2px solid #000; border-radius: 10px;
       aspect-ratio: 1; display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
     .grid-item.active { background: #bae6fd; border-width: 3px; }
-    .grid-item svg, .grid-item img { width: 85%; height: 85%; }
-    .grid-num { position: absolute; top: 1px; left: 3px; font-size: 0.65rem; font-weight: bold; }
-    
+    .grid-item svg { width: 85%; height: 85%; }
+
     #drawCanvas { border: 2px solid #000; border-radius: 8px; background: #fff; cursor: crosshair; display: block; margin: 0 auto; touch-action: none; }
     
-    /* 4자리 코드 스타일 */
-    .peer-box { background: #f8fafc; border: 2px solid #000; border-radius: 8px; padding: 10px; font-size: 0.85rem; }
-    .code-display { font-size: 1.2rem; font-weight: bold; color: #2563eb; letter-spacing: 2px; }
+    .room-box { background: #f8fafc; border: 2px solid #000; border-radius: 8px; padding: 10px; font-size: 0.85rem; }
 
+    /* 우측 채팅 */
     .right-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-    .top-status-bar { background: #fff; border: 3px solid #000; border-radius: 10px; padding: 8px 12px; font-weight: bold; font-size: 1.1rem; }
+    .top-status-bar { background: #fff; border: 3px solid #000; border-radius: 10px; padding: 8px 12px; font-weight: bold; font-size: 1.1rem; display: flex; justify-content: space-between; }
     .chat-container { flex: 1; background: #fff; border: 3px solid #000; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; }
     .chat-title { font-size: 1.2rem; font-weight: 800; margin: 0 0 10px 0; }
     
@@ -77,7 +84,7 @@
     .chat-msg.self { flex-direction: row-reverse; }
     
     .msg-avatar {
-      width: 40px; height: 40px; background: #e0f2fe; border: 2px solid #000;
+      width: 42px; height: 42px; background: #e0f2fe; border: 2px solid #000;
       border-radius: 10px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     }
     .msg-avatar svg, .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -85,8 +92,7 @@
     .msg-user { font-size: 0.8rem; font-weight: bold; margin-bottom: 2px; }
     .chat-msg.self .msg-user { text-align: right; }
     
-    .msg-bubble { border: 2px solid #000; border-radius: 10px; padding: 8px 12px; font-size: 0.9rem; background: #e2e8f0; }
-    .chat-msg.other-1 .msg-bubble { background: #ffedd5; }
+    .msg-bubble { border: 2px solid #000; border-radius: 10px; padding: 8px 12px; font-size: 0.9rem; background: #ffedd5; word-break: break-all; }
     .chat-msg.self .msg-bubble { background: #bae6fd; }
     
     .chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
@@ -97,39 +103,79 @@
 <body>
 
 <div class="main-wrapper">
-  <!-- 좌측 패널 -->
+  <!-- 좌측: 캐릭터 선택 & 방 접속 -->
   <div class="left-panel">
-    <h2 class="panel-title">캐릭터 선택</h2>
+    <h2 class="panel-title">캐릭터 커스텀</h2>
 
+    <!-- 미리보기 및 이름 -->
     <div class="preview-container">
       <div class="big-avatar-box" id="mainPreviewBox"></div>
       <div class="preview-controls">
         <div>
           <div class="input-label">캐릭터 이름</div>
-          <input type="text" id="nameInput" class="custom-input" value="마시멜로">
+          <input type="text" id="nameInput" class="custom-input" value="익명">
         </div>
-        <button class="btn-blue" onclick="saveName()">이름 저장</button>
+        <button class="btn-blue" onclick="saveName()">이름 적용</button>
       </div>
     </div>
 
-    <div class="nav-btns">
-      <button class="btn-gray" onclick="navCharacter(-1)">이전</button>
-      <button class="btn-blue" style="flex:1; padding:6px;" onclick="navCharacter(1)">다음</button>
-    </div>
-
+    <!-- 탭 선택 -->
     <div class="tab-bar">
-      <button class="tab-btn active" onclick="setTab('grid')">기본 캐릭터</button>
+      <button class="tab-btn active" onclick="setTab('custom')">옷/장신구</button>
+      <button class="tab-btn" onclick="setTab('grid')">기본 베이스</button>
       <button class="tab-btn" onclick="setTab('draw')">직접 그리기</button>
       <button class="tab-btn" onclick="setTab('upload')">사진 업로드</button>
-      <button class="tab-btn" onclick="setTab('peer')">친구 연동</button>
     </div>
 
-    <!-- 1. 그리드 -->
-    <div id="tab-grid" class="tab-content active">
+    <!-- 1. 커스텀 탭 (표정, 모자, 옷, 장신구) -->
+    <div id="tab-custom" class="tab-content active">
+      <div class="custom-select-group">
+        <div class="custom-row">
+          <label>😊 표정</label>
+          <select id="selFace" onchange="updateCustomAvatar()">
+            <option value="smile">웃음</option>
+            <option value="wink">윙크</option>
+            <option value="excited">신남 (^o^)</option>
+            <option value="blank">멍함 (._.)</option>
+          </select>
+        </div>
+        <div class="custom-row">
+          <label>🎩 모자</label>
+          <select id="selHat" onchange="updateCustomAvatar()">
+            <option value="none">없음</option>
+            <option value="party">고깔모자</option>
+            <option value="ribbon">빨간 리본</option>
+            <option value="wizard">마법사 모자</option>
+            <option value="crown">왕관</option>
+          </select>
+        </div>
+        <div class="custom-row">
+          <label>👕 옷</label>
+          <select id="selClothes" onchange="updateCustomAvatar()">
+            <option value="none">없음</option>
+            <option value="overalls">멜빵바지</option>
+            <option value="shirt">카라 셔츠</option>
+            <option value="sailor">세일러 복</option>
+          </select>
+        </div>
+        <div class="custom-row">
+          <label>👓 장신구</label>
+          <select id="selAcc" onchange="updateCustomAvatar()">
+            <option value="none">없음</option>
+            <option value="glasses">안경</option>
+            <option value="sunglass">선글라스</option>
+            <option value="blush">볼터치</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 기본 동물 베이스 그리드 -->
+    <div id="tab-grid" class="tab-content">
       <div class="grid-box" id="characterGrid"></div>
     </div>
 
-    <!-- 2. 그리기 -->
+    <!-- 3. 직접 그리기 -->
     <div id="tab-draw" class="tab-content">
       <canvas id="drawCanvas" width="130" height="130"></canvas>
       <div style="display:flex; gap:4px; margin-top:6px; justify-content:center;">
@@ -139,31 +185,28 @@
       </div>
     </div>
 
-    <!-- 3. 사진 업로드 -->
+    <!-- 4. 사진 업로드 -->
     <div id="tab-upload" class="tab-content">
       <input type="file" accept="image/*" class="custom-input" onchange="uploadImage(event)">
     </div>
 
-    <!-- 4. 친구 연동 (4자리 숫자 코드 반영) -->
-    <div id="tab-peer" class="tab-content">
-      <div class="peer-box">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>내 4자리 접속 코드: <span id="myPeerId" class="code-display">----</span></div>
-          <button class="btn-blue" style="padding:4px 8px; font-size:0.75rem;" onclick="generate4DigitCode()">코드 생성</button>
+    <!-- 방 접속 설정 -->
+    <div style="margin-top:10px;">
+      <div class="room-box">
+        <div class="input-label">🔑 채팅방 번호 (같은 번호끼리 연동됨)</div>
+        <div style="display:flex; gap:4px;">
+          <input type="number" id="roomInput" class="custom-input" placeholder="예: 1234" value="1234">
+          <button class="btn-blue" style="width:90px;" onclick="joinRoom()">입장하기</button>
         </div>
-        <div style="display:flex; gap:4px; margin-top:8px;">
-          <input type="text" id="friendIdInput" class="custom-input" placeholder="친구 4자리 숫자 입력" maxlength="4" style="padding:6px;">
-          <button class="btn-blue" style="padding:4px 12px; font-size:0.85rem;" onclick="connectFriend()">연결</button>
-        </div>
-        <div id="connStatus" style="color:#16a34a; font-weight:bold; margin-top:6px;"></div>
       </div>
     </div>
   </div>
 
-  <!-- 우측 패널 -->
+  <!-- 우측: 실시간 다자간 채팅창 -->
   <div class="right-panel">
     <div class="top-status-bar">
-      선택된 캐릭터: <span id="topCharName">마시멜로</span>
+      <span>현재 방 번호: <b id="currentRoomText" style="color:#2563eb;">1234</b></span>
+      <span>접속자 수: <b id="userCountText" style="color:#16a34a;">1명</b></span>
     </div>
 
     <div class="chat-container">
@@ -179,60 +222,110 @@
 </div>
 
 <script>
-  const SVG_LIST = [
-    `<svg viewBox="0 0 100 100"><ellipse cx="38" cy="22" rx="8" ry="18" fill="#fff" stroke="#1e293b" stroke-width="4"/><ellipse cx="62" cy="22" rx="8" ry="18" fill="#fff" stroke="#1e293b" stroke-width="4"/><path d="M 22,58 C 20,38 80,38 78,58 C 80,78 20,78 22,58 Z" fill="#fff" stroke="#1e293b" stroke-width="4"/><circle cx="40" cy="54" r="3.5" fill="#1e293b"/><circle cx="60" cy="54" r="3.5" fill="#1e293b"/><path d="M 45 62 Q 50 67 55 62" stroke="#1e293b" stroke-width="3" fill="none"/><circle cx="32" cy="58" r="4.5" fill="#f472b6"/><circle cx="68" cy="58" r="4.5" fill="#f472b6"/></svg>`,
-    `<svg viewBox="0 0 100 100"><circle cx="28" cy="32" r="10" fill="#1e293b"/><circle cx="72" cy="32" r="10" fill="#1e293b"/><path d="M 20,58 C 18,38 82,38 80,58 C 82,80 18,80 20,58 Z" fill="#fff" stroke="#1e293b" stroke-width="4"/><ellipse cx="38" cy="52" rx="7" ry="9" fill="#1e293b"/><ellipse cx="62" cy="52" rx="7" ry="9" fill="#1e293b"/><ellipse cx="38" cy="51" rx="2" ry="3" fill="#fff"/><ellipse cx="62" cy="51" rx="2" ry="3" fill="#fff"/><path d="M 46 63 Q 50 66 54 63" stroke="#1e293b" stroke-width="3" fill="none"/></svg>`,
-    `<svg viewBox="0 0 100 100"><path d="M 20,58 C 18,35 82,35 80,58 C 82,80 18,80 20,58 Z" fill="#f97316" stroke="#1e293b" stroke-width="4"/><path d="M 30,62 C 28,45 72,45 70,62 C 72,78 28,78 30,62 Z" fill="#ffedd5"/><circle cx="40" cy="52" r="3.5" fill="#1e293b"/><circle cx="60" cy="52" r="3.5" fill="#1e293b"/><path d="M 46 60 Q 50 64 54 60" stroke="#1e293b" stroke-width="3" fill="none"/><circle cx="32" cy="58" r="5" fill="#fca5a5"/><circle cx="68" cy="58" r="5" fill="#fca5a5"/></svg>`,
-    `<svg viewBox="0 0 100 100"><circle cx="28" cy="30" r="9" fill="#334155" stroke="#1e293b" stroke-width="3"/><circle cx="72" cy="30" r="9" fill="#334155" stroke="#1e293b" stroke-width="3"/><path d="M 20,58 C 18,36 82,36 80,58 C 82,80 18,80 20,58 Z" fill="#334155" stroke="#1e293b" stroke-width="4"/><ellipse cx="50" cy="62" rx="14" ry="10" fill="#f8fafc"/><circle cx="40" cy="50" r="3" fill="#1e293b"/><circle cx="60" cy="50" r="3" fill="#1e293b"/><ellipse cx="50" cy="58" rx="4" ry="3" fill="#1e293b"/><circle cx="32" cy="56" r="4.5" fill="#f43f5e"/><circle cx="68" cy="56" r="4.5" fill="#f43f5e"/><rect x="58" y="66" width="14" height="10" rx="3" fill="#fff" stroke="#1e293b" stroke-width="2"/></svg>`
+  // Firebase 공용 데모 주소 연결 (서버 없이 전세계 어디서나 실시간 공유)
+  const firebaseConfig = {
+    databaseURL: "https://public-chat-room-default-rtdb.firebaseio.com/"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // 동물 베이스 템플릿 (토끼, 곰, 햄스터, 강아지, 고양이)
+  const BASE_ANIMALS = [
+    { name: "토끼", body: `<ellipse cx="38" cy="18" rx="7" ry="16" fill="#fff" stroke="#000" stroke-width="3"/><ellipse cx="62" cy="18" rx="7" ry="16" fill="#fff" stroke="#000" stroke-width="3"/><path d="M 22,58 C 20,38 80,38 78,58 C 80,78 20,78 22,58 Z" fill="#fff" stroke="#000" stroke-width="4"/>` },
+    { name: "곰", body: `<circle cx="28" cy="30" r="9" fill="#334155" stroke="#000" stroke-width="3"/><circle cx="72" cy="30" r="9" fill="#334155" stroke="#000" stroke-width="3"/><path d="M 20,58 C 18,36 82,36 80,58 C 82,80 18,80 20,58 Z" fill="#334155" stroke="#000" stroke-width="4"/><ellipse cx="50" cy="62" rx="14" ry="10" fill="#f8fafc"/>` },
+    { name: "햄스터", body: `<path d="M 20,58 C 18,35 82,35 80,58 C 82,80 18,80 20,58 Z" fill="#f97316" stroke="#000" stroke-width="4"/><path d="M 30,62 C 28,45 72,45 70,62 C 72,78 28,78 30,62 Z" fill="#ffedd5"/>` },
+    { name: "강아지", body: `<ellipse cx="20" cy="52" rx="9" ry="16" fill="#fbbf24" stroke="#000" stroke-width="3"/><ellipse cx="80" cy="52" rx="9" ry="16" fill="#fbbf24" stroke="#000" stroke-width="3"/><path d="M 22,58 C 20,38 80,38 78,58 C 80,78 20,78 22,58 Z" fill="#fef08a" stroke="#000" stroke-width="4"/>` },
+    { name: "고양이", body: `<polygon points="22,25 38,45 15,45" fill="#94a3b8" stroke="#000" stroke-width="3"/><polygon points="78,25 62,45 85,45" fill="#94a3b8" stroke="#000" stroke-width="3"/><path d="M 20,58 C 18,38 82,38 80,58 C 82,80 18,80 20,58 Z" fill="#94a3b8" stroke="#000" stroke-width="4"/>` }
   ];
 
-  let currentIndex = 0;
-  let currentAvatar = { type: 'svg', data: SVG_LIST[0] };
-  let charName = "마시멜로";
-  let peer = null, conn = null;
-
-  window.onload = () => {
-    renderGrid();
-    selectCharacter(0);
-    initCanvas();
-    generate4DigitCode(); // 자동으로 4자리 숫자 생성하여 접속
+  // 커스텀 레이어 요소들 (SVG)
+  const FACES = {
+    smile: `<circle cx="40" cy="52" r="3.5" fill="#000"/><circle cx="60" cy="52" r="3.5" fill="#000"/><path d="M 45 61 Q 50 66 55 61" stroke="#000" stroke-width="3" fill="none"/>`,
+    wink: `<path d="M 35 52 L 45 52" stroke="#000" stroke-width="3"/><circle cx="60" cy="52" r="3.5" fill="#000"/><path d="M 45 61 Q 50 66 55 61" stroke="#000" stroke-width="3" fill="none"/>`,
+    excited: `<path d="M 35 54 L 40 48 L 45 54" stroke="#000" stroke-width="3" fill="none"/><path d="M 55 54 L 60 48 L 65 54" stroke="#000" stroke-width="3" fill="none"/><ellipse cx="50" cy="62" rx="4" ry="6" fill="#000"/>`,
+    blank: `<circle cx="40" cy="52" r="3.5" fill="#000"/><circle cx="60" cy="52" r="3.5" fill="#000"/><path d="M 44 62 L 56 62" stroke="#000" stroke-width="3"/>`
   };
 
-  function renderGrid() {
-    const grid = document.getElementById('characterGrid');
-    grid.innerHTML = '';
-    for (let i = 0; i < 30; i++) {
-      const item = document.createElement('div');
-      item.className = `grid-item ${i === currentIndex ? 'active' : ''}`;
-      item.onclick = () => selectCharacter(i);
-      item.innerHTML = `<span class="grid-num">${i + 1}</span>${SVG_LIST[i % SVG_LIST.length]}`;
-      grid.appendChild(item);
-    }
-  }
+  const HATS = {
+    none: ``,
+    party: `<polygon points="50,10 38,35 62,35" fill="#ef4444" stroke="#000" stroke-width="2"/><circle cx="50" cy="8" r="4" fill="#fde047"/>`,
+    ribbon: `<path d="M 40 25 Q 50 30 60 25 Q 65 20 55 18 Q 50 25 45 18 Q 35 20 40 25 Z" fill="#dc2626" stroke="#000" stroke-width="2"/>`,
+    wizard: `<path d="M 50 5 L 30 35 L 70 35 Z" fill="#7c3aed" stroke="#000" stroke-width="2"/><ellipse cx="50" cy="35" rx="25" ry="5" fill="#6d28d9" stroke="#000" stroke-width="2"/>`,
+    crown: `<polygon points="35,35 35,20 42,28 50,15 58,28 65,20 65,35" fill="#eab308" stroke="#000" stroke-width="2"/>`
+  };
 
-  function selectCharacter(index) {
-    currentIndex = index;
-    currentAvatar = { type: 'svg', data: SVG_LIST[index % SVG_LIST.length] };
-    document.querySelectorAll('.grid-item').forEach((el, idx) => el.classList.toggle('active', idx === index));
+  const CLOTHES = {
+    none: ``,
+    overalls: `<path d="M 32,68 L 68,68 L 68,78 L 32,78 Z" fill="#2563eb" stroke="#000" stroke-width="2"/><line x1="36" y1="58" x2="36" y2="68" stroke="#000" stroke-width="3"/><line x1="64" y1="58" x2="64" y2="68" stroke="#000" stroke-width="3"/>`,
+    shirt: `<path d="M 32,62 L 50,70 L 68,62 L 68,78 L 32,78 Z" fill="#fff" stroke="#000" stroke-width="2"/><polygon points="40,62 50,68 60,62" fill="#ef4444"/>`,
+    sailor: `<path d="M 30,62 L 70,62 L 70,78 L 30,78 Z" fill="#0284c7" stroke="#000" stroke-width="2"/><polygon points="42,62 50,72 58,62" fill="#fff"/>`
+  };
+
+  const ACCESSORIES = {
+    none: ``,
+    glasses: `<circle cx="40" cy="52" r="8" fill="none" stroke="#000" stroke-width="2"/><circle cx="60" cy="52" r="8" fill="none" stroke="#000" stroke-width="2"/><line x1="48" y1="52" x2="52" y2="52" stroke="#000" stroke-width="2"/>`,
+    sunglass: `<rect x="30" y="46" width="18" height="12" rx="2" fill="#000"/><rect x="52" y="46" width="18" height="12" rx="2" fill="#000"/><line x1="48" y1="50" x2="52" y2="50" stroke="#000" stroke-width="2"/>`,
+    blush: `<ellipse cx="32" cy="58" rx="5" ry="3" fill="#f43f5e" opacity="0.6"/><ellipse cx="68" cy="58" rx="5" ry="3" fill="#f43f5e" opacity="0.6"/>`
+  };
+
+  let selectedBaseIdx = 0;
+  let currentAvatar = { type: 'custom' };
+  let currentRoom = "1234";
+  let myName = "귀여운유저_" + Math.floor(Math.random()*100);
+  let roomRef = null;
+
+  window.onload = () => {
+    // 중복 방지를 위한 랜덤 기본 캐릭터 고르기
+    selectedBaseIdx = Math.floor(Math.random() * BASE_ANIMALS.length);
+    document.getElementById('nameInput').value = myName;
+
+    renderBaseGrid();
+    updateCustomAvatar();
+    initCanvas();
+    joinRoom(); // 기본 1234방 입장
+  };
+
+  // 1. 커스텀 조합하여 SVG 생성
+  function updateCustomAvatar() {
+    const base = BASE_ANIMALS[selectedBaseIdx].body;
+    const face = FACES[document.getElementById('selFace').value];
+    const hat = HATS[document.getElementById('selHat').value];
+    const clothes = CLOTHES[document.getElementById('selClothes').value];
+    const acc = ACCESSORIES[document.getElementById('selAcc').value];
+
+    const fullSvg = `<svg viewBox="0 0 100 100">${base}${face}${clothes}${acc}${hat}</svg>`;
+    currentAvatar = { type: 'svg', data: fullSvg };
     updatePreview();
   }
 
-  function navCharacter(dir) {
-    let next = (currentIndex + dir + 30) % 30;
-    selectCharacter(next);
+  function renderBaseGrid() {
+    const grid = document.getElementById('characterGrid');
+    grid.innerHTML = '';
+    BASE_ANIMALS.forEach((anim, idx) => {
+      const item = document.createElement('div');
+      item.className = `grid-item ${idx === selectedBaseIdx ? 'active' : ''}`;
+      item.onclick = () => {
+        selectedBaseIdx = idx;
+        renderBaseGrid();
+        updateCustomAvatar();
+      };
+      item.innerHTML = `<svg viewBox="0 0 100 100">${anim.body}${FACES.smile}</svg>`;
+      grid.appendChild(item);
+    });
   }
 
   function updatePreview() {
     const box = document.getElementById('mainPreviewBox');
-    box.innerHTML = currentAvatar.type === 'svg' ? currentAvatar.data : `<img src="${currentAvatar.data}">`;
+    if (currentAvatar.type === 'svg') {
+      box.innerHTML = currentAvatar.data;
+    } else {
+      box.innerHTML = `<img src="${currentAvatar.data}">`;
+    }
   }
 
   function saveName() {
     const val = document.getElementById('nameInput').value.trim();
-    if (val) {
-      charName = val;
-      document.getElementById('topCharName').innerText = charName;
-    }
+    if (val) myName = val;
   }
 
   function setTab(tab) {
@@ -242,47 +335,63 @@
     document.getElementById(`tab-${tab}`).classList.add('active');
   }
 
-  // 4자리 숫자 코드 연동 핵심 로직
-  function generate4DigitCode() {
-    if (peer) peer.destroy(); // 기존 연결 해제
+  // 2. 같은 방 번호 연동 (Firebase Realtime DB)
+  function joinRoom() {
+    const roomNum = document.getElementById('roomInput').value.trim();
+    if (!roomNum) return alert("방 번호를 입력하세요!");
 
-    // 1000 ~ 9999 사이의 랜덤 4자리 숫자 생성
-    const randomCode = Math.floor(1000 + Math.random() * 9000).toString();
+    currentRoom = roomNum;
+    document.getElementById('currentRoomText').innerText = currentRoom;
+    document.getElementById('chatList').innerHTML = '';
+
+    if (roomRef) roomRef.off(); // 이전 방 구독 해제
+
+    // 새로운 방 주소 수신 시작
+    roomRef = db.ref('rooms/' + currentRoom);
     
-    // PeerJS를 해당 4자리 ID로 초기화
-    peer = new Peer(randomCode);
-
-    peer.on('open', id => {
-      document.getElementById('myPeerId').innerText = id;
-    });
-
-    // 만약 선점된 숫자라면 재시도
-    peer.on('error', err => {
-      if (err.type === 'unavailable-id') {
-        generate4DigitCode(); // 다른 숫자로 자동 재시도
-      }
-    });
-
-    peer.on('connection', c => {
-      conn = c;
-      listenChat();
+    // 메시지 수신 이벤트
+    roomRef.child('messages').limitToLast(50).on('child_added', snapshot => {
+      const data = snapshot.val();
+      renderMessage(data.user, data.avatar, data.text, data.user === myName);
     });
   }
 
-  function connectFriend() {
-    const friendId = document.getElementById('friendIdInput').value.trim();
-    if (friendId.length !== 4) return alert("4자리 숫자를 입력하세요!");
+  // 3. 메시지 전송
+  function sendMsg() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Firebase 데이터베이스로 메시지 발송
+    roomRef.child('messages').push({
+      user: myName,
+      avatar: currentAvatar,
+      text: text,
+      time: Date.now()
+    });
+
+    input.value = '';
+  }
+
+  function renderMessage(user, avatar, text, isSelf) {
+    const list = document.getElementById('chatList');
+    const msg = document.createElement('div');
+    msg.className = `chat-msg ${isSelf ? 'self' : ''}`;
     
-    conn = peer.connect(friendId);
-    listenChat();
+    const avatarHtml = avatar.type === 'svg' ? avatar.data : `<img src="${avatar.data}">`;
+
+    msg.innerHTML = `
+      <div class="msg-avatar">${avatarHtml}</div>
+      <div class="msg-body">
+        <div class="msg-user">${escapeHtml(user)}</div>
+        <div class="msg-bubble">${escapeHtml(text)}</div>
+      </div>
+    `;
+    list.appendChild(msg);
+    list.scrollTop = list.scrollHeight;
   }
 
-  function listenChat() {
-    conn.on('open', () => document.getElementById('connStatus').innerText = "🟢 친구와 연결 완료!");
-    conn.on('data', data => addMessage(data.user, data.avatar, data.text, false));
-  }
-
-  // 그리기 기능
+  // 4. 직접 그리기 & 업로드 지원
   const canvas = document.getElementById('drawCanvas');
   const ctx = canvas.getContext('2d');
   let isDrawing = false;
@@ -314,33 +423,6 @@
       reader.onload = (evt) => { currentAvatar = { type: 'img', data: evt.target.result }; updatePreview(); };
       reader.readAsDataURL(file);
     }
-  }
-
-  function sendMsg() {
-    const input = document.getElementById('chatInput');
-    const text = input.value.trim();
-    if (!text) return;
-
-    addMessage(charName, currentAvatar, text, true);
-    if (conn && conn.open) conn.send({ user: charName, avatar: currentAvatar, text: text });
-    input.value = '';
-  }
-
-  function addMessage(user, avatar, text, isSelf) {
-    const list = document.getElementById('chatList');
-    const msg = document.createElement('div');
-    msg.className = `chat-msg ${isSelf ? 'self' : 'other-1'}`;
-    const avatarHtml = avatar.type === 'svg' ? avatar.data : `<img src="${avatar.data}">`;
-
-    msg.innerHTML = `
-      <div class="msg-avatar">${avatarHtml}</div>
-      <div class="msg-body">
-        <div class="msg-user">${user}</div>
-        <div class="msg-bubble">${escapeHtml(text)}</div>
-      </div>
-    `;
-    list.appendChild(msg);
-    list.scrollTop = list.scrollHeight;
   }
 
   function escapeHtml(str) { return str.replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
