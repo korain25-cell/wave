@@ -2,17 +2,19 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>실시간 멀티 커스텀 채팅룸</title>
   
   <meta name="theme-color" content="#38bdf8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="귀여운 채팅">
 
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2338bdf8'/><ellipse cx='38' cy='25' rx='8' ry='18' fill='%23fff' stroke='%23000' stroke-width='3'/><ellipse cx='62' cy='25' rx='8' ry='18' fill='%23fff' stroke='%23000' stroke-width='3'/><circle cx='50' cy='60' r='30' fill='%23fff' stroke='%23000' stroke-width='4'/><circle cx='40' cy='55' r='4' fill='%23000'/><circle cx='60' cy='55' r='4' fill='%23000'/><path d='M 45 65 Q 50 70 55 65' stroke='%23000' stroke-width='3' fill='none'/></svg>">
+  <!-- 🎨 홈 화면 앱 아이콘 지정 (Apple Touch Icon & Web App Manifest) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2338bdf8'/><circle cx='50' cy='55' r='30' fill='%23fff'/><ellipse cx='38' cy='25' rx='8' ry='18' fill='%23fff'/><ellipse cx='62' cy='25' rx='8' ry='18' fill='%23fff'/><circle cx='40' cy='52' r='4' fill='%23000'/><circle cx='60' cy='52' r='4' fill='%23000'/><path d='M 45 62 Q 50 67 55 62' stroke='%23000' stroke-width='3' fill='none'/></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2338bdf8'/><circle cx='50' cy='55' r='30' fill='%23fff'/><ellipse cx='38' cy='25' rx='8' ry='18' fill='%23fff'/><ellipse cx='62' cy='25' rx='8' ry='18' fill='%23fff'/><circle cx='40' cy='52' r='4' fill='%23000'/><circle cx='60' cy='52' r='4' fill='%23000'/><path d='M 45 62 Q 50 67 55 62' stroke='%23000' stroke-width='3' fill='none'/></svg>">
   
-  <!-- PWA Web App Manifest (앱 설치 지원) -->
-  <link rel="manifest" href="data:application/manifest+json;utf8,{%22name%22:%22커스텀%20채팅 앱%22,%22short_name%22:%22채팅앱%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23e0f2fe%22,%22theme_color%22:%22%2338bdf8%22}">
+  <link rel="manifest" href="data:application/manifest+json;utf8,{%22name%22:%22귀여운%20실시간%20채팅%22,%22short_name%22:%22귀여운채팅%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23e0f2fe%22,%22theme_color%22:%22%2338bdf8%22,%22icons%22:[{%22src%22:%22data:image/svg%2Bxml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2338bdf8'/><circle cx='50' cy='55' r='30' fill='%23fff'/><ellipse cx='38' cy='25' rx='8' ry='18' fill='%23fff'/><ellipse cx='62' cy='25' rx='8' ry='18' fill='%23fff'/><circle cx='40' cy='52' r='4' fill='%23000'/><circle cx='60' cy='52' r='4' fill='%23000'/><path d='M 45 62 Q 50 67 55 62' stroke='%23000' stroke-width='3' fill='none'/></svg>%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg%2Bxml%22}]}">
 
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   
@@ -21,18 +23,14 @@
     
     body {
       margin: 0; 
-      padding: 20px; 
+      padding: 12px; 
       display: flex; 
       flex-direction: column;
       align-items: center; 
       min-height: 100vh;
     }
 
-    /* 🎨 배경 테마 정의 */
-    body.theme-default {
-      background-color: #e0f2fe;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M20 20 a 4 4 0 0 1 0 -8 a 4 4 0 0 1 0 8 M32 20 a 4 4 0 0 1 0 -8 a 4 4 0 0 1 0 8' fill='%23fbbf24' stroke='%23d97706' stroke-width='1.5'/%3E%3Ccircle cx='26' cy='24' r='9' fill='%23fbbf24' stroke='%23d97706' stroke-width='1.5'/%3E%3Ccircle cx='23' cy='22' r='1' fill='%23000'/%3E%3Ccircle cx='29' cy='22' r='1' fill='%23000'/%3E%3Cellipse cx='26' cy='25' rx='3' ry='2' fill='%23fff'/%3E%3Cpath d='M75 18 l2 4 l4 1 l-3 3 l1 4 l-4 -2 l-4 2 l1 -4 l-3 -3 l4 -1 z' fill='%23f43f5e' opacity='0.7'/%3E%3Cpath d='M25 70 Q25 65 30 65 Q35 65 35 70 Q35 75 25 82 Q15 75 15 70 Q15 65 20 65 Q25 65 25 70 Z' fill='%23ec4899' opacity='0.6'/%3E%3Cellipse cx='70' cy='62' rx='3' ry='8' fill='%23fff' stroke='%23cbd5e1' stroke-width='1.5'/%3E%3Cellipse cx='80' cy='62' rx='3' ry='8' fill='%23fff' stroke='%23cbd5e1' stroke-width='1.5'/%3E%3Ccircle cx='75' cy='72' r='8' fill='%23fff' stroke='%23cbd5e1' stroke-width='1.5'/%3E%3Ccircle cx='72' cy='70' r='1' fill='%23000'/%3E%3Ccircle cx='78' cy='70' r='1' fill='%23000'/%3E%3Cellipse cx='50' cy='45' rx='4' ry='3' fill='%2338bdf8' opacity='0.6'/%3E%3Ccircle cx='45' cy='39' r='1.5' fill='%2338bdf8' opacity='0.6'/%3E%3Ccircle cx='50' cy='37' r='1.5' fill='%2338bdf8' opacity='0.6'/%3E%3Ccircle cx='55' cy='39' r='1.5' fill='%2338bdf8' opacity='0.6'/%3E%3C/svg%3E");
-    }
+    body.theme-default { background-color: #e0f2fe; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M20 20 a 4 4 0 0 1 0 -8 a 4 4 0 0 1 0 8 M32 20 a 4 4 0 0 1 0 -8 a 4 4 0 0 1 0 8' fill='%23fbbf24' stroke='%23d97706' stroke-width='1.5'/%3E%3Ccircle cx='26' cy='24' r='9' fill='%23fbbf24' stroke='%23d97706' stroke-width='1.5'/%3E%3Ccircle cx='23' cy='22' r='1' fill='%23000'/%3E%3Ccircle cx='29' cy='22' r='1' fill='%23000'/%3E%3Cellipse cx='26' cy='25' rx='3' ry='2' fill='%23fff'/%3E%3Cpath d='M75 18 l2 4 l4 1 l-3 3 l1 4 l-4 -2 l-4 2 l1 -4 l-3 -3 l4 -1 z' fill='%23f43f5e' opacity='0.7'/%3E%3Cpath d='M25 70 Q25 65 30 65 Q35 65 35 70 Q35 75 25 82 Q15 75 15 70 Q15 65 20 65 Q25 65 25 70 Z' fill='%23ec4899' opacity='0.6'/%3E%3Cellipse cx='70' cy='62' rx='3' ry='8' fill='%23fff' stroke='%23cbd5e1' stroke-width='1.5'/%3E%3Cellipse cx='80' cy='62' rx='3' ry='8' fill='%23fff' stroke='%23cbd5e1' stroke-width='1.5'/%3E%3Ccircle cx='75' cy='72' r='8' fill='%23fff' stroke='%23cbd5e1' stroke-width='1.5'/%3E%3Ccircle cx='72' cy='70' r='1' fill='%23000'/%3E%3Ccircle cx='78' cy='70' r='1' fill='%23000'/%3E%3Cellipse cx='50' cy='45' rx='4' ry='3' fill='%2338bdf8' opacity='0.6'/%3E%3Ccircle cx='45' cy='39' r='1.5' fill='%2338bdf8' opacity='0.6'/%3E%3Ccircle cx='50' cy='37' r='1.5' fill='%2338bdf8' opacity='0.6'/%3E%3Ccircle cx='55' cy='39' r='1.5' fill='%2338bdf8' opacity='0.6'/%3E%3C/svg%3E"); }
     body.theme-pink { background-color: #fce7f3; background-image: radial-gradient(#f472b6 1.5px, transparent 1.5px), radial-gradient(#fb7185 1.5px, #fce7f3 1.5px); background-size: 60px 60px; background-position: 0 0, 30px 30px; }
     body.theme-green { background-color: #dcfce7; background-image: radial-gradient(#4ade80 2px, transparent 2px); background-size: 32px 32px; }
     body.theme-night { background-color: #0f172a; background-image: radial-gradient(#cbd5e1 1px, transparent 1px), radial-gradient(#fef08a 1.5px, transparent 1.5px); background-size: 40px 40px, 80px 80px; }
@@ -40,107 +38,110 @@
     body.theme-warm { background-color: #fef3c7; background-image: radial-gradient(#f59e0b 1.5px, transparent 1.5px); background-size: 24px 24px; }
 
     .main-wrapper { 
-      display: flex; gap: 16px; width: 100%; max-width: 980px; height: 720px;
+      display: flex; gap: 12px; width: 100%; max-width: 980px; height: 720px;
     }
     
     .left-panel {
-      flex: 1.2; background: #fff; border: 3px solid #000; border-radius: 16px; padding: 16px;
+      flex: 1.2; background: #fff; border: 3px solid #000; border-radius: 16px; padding: 12px;
       box-shadow: 4px 4px 0px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow-y: auto; gap: 8px;
     }
-    .panel-title { font-size: 1.3rem; font-weight: 800; text-align: center; margin: 0 0 4px 0; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; }
+    .panel-title { font-size: 1.1rem; font-weight: 800; margin: 0; }
     
-    .preview-container { display: flex; gap: 12px; }
+    .preview-container { display: flex; gap: 10px; }
     .big-avatar-box {
-      width: 100px; height: 100px; background: #e0f2fe; border: 3px solid #000;
-      border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+      width: 80px; height: 80px; background: #e0f2fe; border: 3px solid #000;
+      border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
     }
-    .big-avatar-box svg, .big-avatar-box img { width: 85px; height: 85px; object-fit: cover; }
+    .big-avatar-box svg, .big-avatar-box img { width: 65px; height: 65px; object-fit: cover; }
     
     .preview-controls { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-    .input-label { font-size: 0.85rem; font-weight: bold; margin-bottom: 2px; }
-    .custom-input { width: 100%; padding: 6px 8px; border: 2px solid #000; border-radius: 8px; font-size: 0.88rem; outline: none; }
+    .input-label { font-size: 0.8rem; font-weight: bold; margin-bottom: 2px; }
+    .custom-input { width: 100%; padding: 6px 8px; border: 2px solid #000; border-radius: 8px; font-size: 0.85rem; outline: none; }
     
-    .btn-blue { background: #2563eb; color: white; font-weight: bold; border: 2px solid #000; border-radius: 8px; padding: 6px; cursor: pointer; font-size: 0.85rem; text-align: center; }
-    .btn-green { background: #16a34a; color: white; font-weight: bold; border: 2px solid #000; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 0.85rem; text-align: center; }
-    .btn-gray { background: #64748b; color: white; border: 2px solid #000; border-radius: 6px; padding: 4px 8px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
-    .btn-danger { background: #ef4444; color: white; border: 1.5px solid #000; border-radius: 4px; padding: 2px 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    .btn-blue { background: #2563eb; color: white; font-weight: bold; border: 2px solid #000; border-radius: 8px; padding: 6px; cursor: pointer; font-size: 0.82rem; text-align: center; }
+    .btn-green { background: #16a34a; color: white; font-weight: bold; border: 2px solid #000; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 0.82rem; text-align: center; }
+    .btn-gray { background: #64748b; color: white; border: 2px solid #000; border-radius: 6px; padding: 3px 6px; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
+    .btn-danger { background: #ef4444; color: white; border: 1.5px solid #000; border-radius: 4px; padding: 2px 5px; font-size: 0.72rem; font-weight: bold; cursor: pointer; }
     
-    .tab-bar { display: flex; gap: 4px; margin-top: 4px; }
-    .tab-btn { flex: 1; padding: 6px 2px; font-size: 0.75rem; font-weight: bold; background: #e2e8f0; border: 2px solid #000; border-radius: 6px; cursor: pointer; }
+    .tab-bar { display: flex; gap: 4px; margin-top: 2px; }
+    .tab-btn { flex: 1; padding: 5px 2px; font-size: 0.72rem; font-weight: bold; background: #e2e8f0; border: 2px solid #000; border-radius: 6px; cursor: pointer; }
     .tab-btn.active { background: #fde047; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     
-    .custom-select-group { display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto; padding-right: 4px; }
-    .custom-row { display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 4px 8px; border: 2px solid #000; border-radius: 8px; }
-    .custom-row label { font-size: 0.8rem; font-weight: bold; }
-    .custom-row select { padding: 2px 4px; border: 2px solid #000; border-radius: 6px; font-weight: bold; font-size: 0.8rem; }
+    .custom-select-group { display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto; }
+    .custom-row { display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 3px 6px; border: 1.5px solid #000; border-radius: 6px; }
+    .custom-row label { font-size: 0.75rem; font-weight: bold; }
+    .custom-row select { padding: 2px; border: 1.5px solid #000; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
 
-    .grid-box { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; background: #f0f9ff; border: 2px solid #000; border-radius: 12px; padding: 8px; max-height: 140px; overflow-y: auto; }
-    .grid-item { position: relative; background: #fff; border: 2px solid #000; border-radius: 10px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .grid-item.active { background: #bae6fd; border-width: 3px; }
+    .grid-box { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: #f0f9ff; border: 2px solid #000; border-radius: 10px; padding: 6px; max-height: 110px; overflow-y: auto; }
+    .grid-item { position: relative; background: #fff; border: 1.5px solid #000; border-radius: 8px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .grid-item.active { background: #bae6fd; border-width: 2.5px; }
     .grid-item svg { width: 85%; height: 85%; }
 
     #drawCanvas { border: 2px solid #000; border-radius: 8px; background: #fff; cursor: crosshair; display: block; margin: 0 auto; touch-action: none; }
     
-    .room-section { background: #f8fafc; border: 2px solid #000; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .room-section { background: #f8fafc; border: 2px solid #000; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
     .room-create-row { display: flex; gap: 6px; }
-    .room-list-box { max-height: 110px; overflow-y: auto; border: 2px dashed #000; border-radius: 8px; padding: 4px; background: #fff; display: flex; flex-direction: column; gap: 4px; }
-    .room-item { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; border: 1.5px solid #000; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
-    .room-item:hover { background: #fde047; }
+    .room-list-box { max-height: 100px; overflow-y: auto; border: 2px dashed #000; border-radius: 8px; padding: 4px; background: #fff; display: flex; flex-direction: column; gap: 4px; }
+    .room-item { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; border: 1.5px solid #000; padding: 4px 6px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; }
 
-    .right-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; height: 100%; min-width: 0; }
+    .right-panel { flex: 1; display: flex; flex-direction: column; gap: 8px; height: 100%; min-width: 0; }
     
+    /* 📱 모바일 가로 넘어감 방지: flex-wrap: wrap 적용 */
     .top-status-bar { 
-      background: #fff; border: 3px solid #000; border-radius: 12px; padding: 6px 12px; 
-      font-weight: bold; font-size: 0.88rem; display: flex; flex-wrap: nowrap; 
-      justify-content: space-between; align-items: center; flex-shrink: 0; gap: 6px; min-height: 48px;
+      background: #fff; border: 3px solid #000; border-radius: 12px; padding: 8px 10px; 
+      font-weight: bold; font-size: 0.82rem; display: flex; flex-wrap: wrap; 
+      justify-content: space-between; align-items: center; flex-shrink: 0; gap: 6px; min-height: 44px;
     }
 
-    .room-info { display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
-    
-    .theme-selector { display: flex; gap: 3px; align-items: center; flex-shrink: 0; white-space: nowrap; }
-    .theme-btn { padding: 2px 6px; border: 2px solid #000; border-radius: 6px; font-size: 0.85rem; cursor: pointer; background: #fff; }
-    .theme-btn.active { background: #fde047; border-width: 2.5px; }
+    .room-info { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .theme-selector { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; }
+    .theme-btn { padding: 2px 5px; border: 1.5px solid #000; border-radius: 5px; font-size: 0.8rem; cursor: pointer; background: #fff; }
+    .theme-btn.active { background: #fde047; border-width: 2px; }
 
-    .status-badge { background: #22c55e; color: white; padding: 4px 8px; border-radius: 10px; font-size: 0.75rem; border: 1.5px solid #000; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; flex-shrink: 0; line-height: 1; }
+    .status-badge { background: #22c55e; color: white; padding: 3px 6px; border-radius: 8px; font-size: 0.7rem; border: 1.5px solid #000; display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
 
-    .chat-container { flex: 1; background: #fff; border: 3px solid #000; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; min-height: 0; }
-    .chat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
-    .chat-title { font-size: 1.2rem; font-weight: 800; margin: 0; }
+    .chat-container { flex: 1; background: #fff; border: 3px solid #000; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; min-height: 0; }
+    .chat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-shrink: 0; }
+    .chat-title { font-size: 1.1rem; font-weight: 800; margin: 0; }
     
-    .chat-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 6px; min-height: 0; }
-    .chat-msg { display: flex; align-items: flex-start; gap: 8px; }
+    .chat-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; min-height: 0; }
+    .chat-msg { display: flex; align-items: flex-start; gap: 6px; }
     .chat-msg.self { flex-direction: row-reverse; }
     
-    .msg-avatar { width: 42px; height: 42px; background: #e0f2fe; border: 2px solid #000; border-radius: 10px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .msg-avatar { width: 38px; height: 38px; background: #e0f2fe; border: 2px solid #000; border-radius: 8px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
     .msg-avatar svg, .msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .msg-body { max-width: 75%; }
-    .msg-user { font-size: 0.8rem; font-weight: bold; margin-bottom: 2px; }
+    .msg-body { max-width: 78%; }
+    .msg-user { font-size: 0.75rem; font-weight: bold; margin-bottom: 2px; }
     .chat-msg.self .msg-user { text-align: right; }
-    .msg-bubble { border: 2px solid #000; border-radius: 10px; padding: 8px 12px; font-size: 0.9rem; background: #ffedd5; word-break: break-all; }
+    .msg-bubble { border: 2px solid #000; border-radius: 8px; padding: 6px 10px; font-size: 0.85rem; background: #ffedd5; word-break: break-all; }
     .chat-msg.self .msg-bubble { background: #bae6fd; }
     
-    .chat-input-row { display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; }
+    .chat-input-row { display: flex; gap: 6px; margin-top: 8px; flex-shrink: 0; }
 
-    /* 📱 하단 앱 설치 바 스타일 */
+    /* 📱 하단 앱 설치 바 */
     .app-download-footer {
-      width: 100%; max-width: 980px; margin-top: 16px; background: #fff; border: 3px solid #000;
-      border-radius: 14px; padding: 12px; display: flex; justify-content: space-between; align-items: center;
-      box-shadow: 4px 4px 0px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px;
+      width: 100%; max-width: 980px; margin-top: 10px; background: #fff; border: 3px solid #000;
+      border-radius: 12px; padding: 10px; display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 3px 3px 0px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 8px;
     }
-    .app-download-title { font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; }
-    .app-btn-group { display: flex; gap: 8px; }
+    .app-download-title { font-weight: 800; font-size: 0.88rem; display: flex; align-items: center; gap: 4px; }
+    .app-btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
     .btn-app {
-      display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 2px solid #000;
-      border-radius: 10px; font-weight: bold; font-size: 0.85rem; cursor: pointer; color: #fff;
+      display: flex; align-items: center; gap: 4px; padding: 6px 10px; border: 2px solid #000;
+      border-radius: 8px; font-weight: bold; font-size: 0.78rem; cursor: pointer; color: #fff;
     }
     .btn-app-ios { background: #000; }
     .btn-app-galaxy { background: #3b82f6; }
+    .btn-app-kakao { background: #fee500; color: #000; }
 
+    /* 모바일 반응형 설정 */
     @media (max-width: 768px) { 
+      body { padding: 8px; }
       .main-wrapper { flex-direction: column; height: auto; } 
-      .right-panel { height: 500px; }
+      .right-panel { height: 420px; }
       .app-download-footer { flex-direction: column; text-align: center; }
       .app-btn-group { width: 100%; justify-content: center; }
     }
@@ -151,83 +152,89 @@
 <div class="main-wrapper">
   <!-- 좌측 영역 -->
   <div class="left-panel">
-    <h2 class="panel-title">캐릭터 커스텀</h2>
-
-    <div class="preview-container">
-      <div class="big-avatar-box" id="mainPreviewBox"></div>
-      <div class="preview-controls">
-        <div>
-          <div class="input-label">캐릭터 이름</div>
-          <input type="text" id="nameInput" class="custom-input" value="익명">
-        </div>
-        <button class="btn-blue" onclick="saveName()">이름 적용</button>
-      </div>
+    <div class="panel-header">
+      <h2 class="panel-title">캐릭터 커스텀</h2>
+      <button class="btn-gray" onclick="toggleCustomSection()" id="toggleCustomBtn">▲ 메뉴 접기</button>
     </div>
 
-    <div class="tab-bar">
-      <button class="tab-btn active" onclick="setTab('custom')">옷/장신구</button>
-      <button class="tab-btn" onclick="setTab('grid')">기본 베이스</button>
-      <button class="tab-btn" onclick="setTab('draw')">그리기</button>
-      <button class="tab-btn" onclick="setTab('upload')">업로드</button>
-    </div>
-
-    <div id="tab-custom" class="tab-content active">
-      <div class="custom-select-group">
-        <div class="custom-row">
-          <label>😊 표정</label>
-          <select id="selFace" onchange="updateCustomAvatar()">
-            <option value="smile">웃음</option>
-            <option value="wink">윙크</option>
-            <option value="excited">신남 (^o^)</option>
-            <option value="blank">멍함 (._.)</option>
-          </select>
-        </div>
-        <div class="custom-row">
-          <label>🎩 모자</label>
-          <select id="selHat" onchange="updateCustomAvatar()">
-            <option value="none">없음</option>
-            <option value="party">고깔모자</option>
-            <option value="ribbon">빨간 리본</option>
-            <option value="wizard">마법사 모자</option>
-            <option value="crown">왕관</option>
-          </select>
-        </div>
-        <div class="custom-row">
-          <label>👕 옷</label>
-          <select id="selClothes" onchange="updateCustomAvatar()">
-            <option value="none">없음</option>
-            <option value="overalls">멜빵바지</option>
-            <option value="shirt">카라 셔츠</option>
-            <option value="sailor">세일러 복</option>
-          </select>
-        </div>
-        <div class="custom-row">
-          <label>👓 장신구</label>
-          <select id="selAcc" onchange="updateCustomAvatar()">
-            <option value="none">없음</option>
-            <option value="glasses">안경</option>
-            <option value="sunglass">선글라스</option>
-            <option value="blush">볼터치</option>
-          </select>
+    <!-- 접었다 폈다 할 수 있는 커스텀 상자 -->
+    <div id="customFoldableArea">
+      <div class="preview-container">
+        <div class="big-avatar-box" id="mainPreviewBox"></div>
+        <div class="preview-controls">
+          <div>
+            <div class="input-label">캐릭터 이름</div>
+            <input type="text" id="nameInput" class="custom-input" value="익명">
+          </div>
+          <button class="btn-blue" onclick="saveName()">이름 적용</button>
         </div>
       </div>
-    </div>
 
-    <div id="tab-grid" class="tab-content">
-      <div class="grid-box" id="characterGrid"></div>
-    </div>
-
-    <div id="tab-draw" class="tab-content">
-      <canvas id="drawCanvas" width="110" height="110"></canvas>
-      <div style="display:flex; gap:4px; margin-top:4px; justify-content:center;">
-        <input type="color" id="penColor" value="#000000">
-        <button class="btn-gray" onclick="clearCanvas()">지우기</button>
-        <button class="btn-blue" style="padding:2px 6px; font-size:0.75rem;" onclick="applyDrawing()">적용</button>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="setTab('custom')">옷/장신구</button>
+        <button class="tab-btn" onclick="setTab('grid')">기본 베이스</button>
+        <button class="tab-btn" onclick="setTab('draw')">그리기</button>
+        <button class="tab-btn" onclick="setTab('upload')">업로드</button>
       </div>
-    </div>
 
-    <div id="tab-upload" class="tab-content">
-      <input type="file" accept="image/*" class="custom-input" onchange="uploadImage(event)">
+      <div id="tab-custom" class="tab-content active" style="margin-top:4px;">
+        <div class="custom-select-group">
+          <div class="custom-row">
+            <label>😊 표정</label>
+            <select id="selFace" onchange="updateCustomAvatar()">
+              <option value="smile">웃음</option>
+              <option value="wink">윙크</option>
+              <option value="excited">신남 (^o^)</option>
+              <option value="blank">멍함 (._.)</option>
+            </select>
+          </div>
+          <div class="custom-row">
+            <label>🎩 모자</label>
+            <select id="selHat" onchange="updateCustomAvatar()">
+              <option value="none">없음</option>
+              <option value="party">고깔모자</option>
+              <option value="ribbon">빨간 리본</option>
+              <option value="wizard">마법사 모자</option>
+              <option value="crown">왕관</option>
+            </select>
+          </div>
+          <div class="custom-row">
+            <label>👕 옷</label>
+            <select id="selClothes" onchange="updateCustomAvatar()">
+              <option value="none">없음</option>
+              <option value="overalls">멜빵바지</option>
+              <option value="shirt">카라 셔츠</option>
+              <option value="sailor">세일러 복</option>
+            </select>
+          </div>
+          <div class="custom-row">
+            <label>👓 장신구</label>
+            <select id="selAcc" onchange="updateCustomAvatar()">
+              <option value="none">없음</option>
+              <option value="glasses">안경</option>
+              <option value="sunglass">선글라스</option>
+              <option value="blush">볼터치</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-grid" class="tab-content" style="margin-top:4px;">
+        <div class="grid-box" id="characterGrid"></div>
+      </div>
+
+      <div id="tab-draw" class="tab-content" style="margin-top:4px;">
+        <canvas id="drawCanvas" width="90" height="90"></canvas>
+        <div style="display:flex; gap:4px; margin-top:4px; justify-content:center;">
+          <input type="color" id="penColor" value="#000000">
+          <button class="btn-gray" onclick="clearCanvas()">지우기</button>
+          <button class="btn-blue" style="padding:2px 6px; font-size:0.75rem;" onclick="applyDrawing()">적용</button>
+        </div>
+      </div>
+
+      <div id="tab-upload" class="tab-content" style="margin-top:4px;">
+        <input type="file" accept="image/*" class="custom-input" onchange="uploadImage(event)">
+      </div>
     </div>
 
     <!-- 🏠 방 만들기 & 개설된 방 목록 -->
@@ -238,8 +245,8 @@
         <button class="btn-blue" onclick="createCustomRoom()">만들기</button>
       </div>
 
-      <div class="input-label" style="margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
-        <span>📜 개설된 채팅방 목록</span>
+      <div class="input-label" style="margin-top:2px; display:flex; justify-content:space-between; align-items:center;">
+        <span>📜 채팅방 목록</span>
         <button class="btn-gray" onclick="requestRoomList()">🔄 새로고침</button>
       </div>
       <div class="room-list-box" id="roomListBox"></div>
@@ -248,21 +255,22 @@
 
   <!-- 우측: 채팅창 -->
   <div class="right-panel">
+    <!-- 상단 바: 줄바꿈 안전한 레이아웃 -->
     <div class="top-status-bar">
       <div class="room-info">
         <span>방:</span>
         <b id="currentRoomText" style="color:#2563eb;">방 선택 없음</b>
-        <button id="leaveBtn" class="btn-gray" style="display:none; padding:2px 6px; font-size:0.75rem; margin-left:4px;" onclick="leaveRoom()">🚪 나가기</button>
+        <button id="leaveBtn" class="btn-gray" style="display:none; padding:2px 5px; font-size:0.72rem;" onclick="leaveRoom()">🚪 나가기</button>
       </div>
       
       <div class="theme-selector">
-        <span style="font-size:0.8rem; margin-right:2px;">테마:</span>
-        <button class="theme-btn active" title="기본 아기자기" onclick="changeTheme('default', this)">🧸</button>
-        <button class="theme-btn" title="달콤 핑크" onclick="changeTheme('pink', this)">🌸</button>
-        <button class="theme-btn" title="싱그러운 초록" onclick="changeTheme('green', this)">🌿</button>
-        <button class="theme-btn" title="따뜻한 코지" onclick="changeTheme('warm', this)">🍁</button>
-        <button class="theme-btn" title="감성 밤하늘" onclick="changeTheme('night', this)">🌙</button>
-        <button class="theme-btn" title="모던 심플" onclick="changeTheme('gray', this)">🎨</button>
+        <span style="font-size:0.75rem;">테마:</span>
+        <button class="theme-btn active" title="기본" onclick="changeTheme('default', this)">🧸</button>
+        <button class="theme-btn" title="핑크" onclick="changeTheme('pink', this)">🌸</button>
+        <button class="theme-btn" title="초록" onclick="changeTheme('green', this)">🌿</button>
+        <button class="theme-btn" title="코지" onclick="changeTheme('warm', this)">🍁</button>
+        <button class="theme-btn" title="밤하늘" onclick="changeTheme('night', this)">🌙</button>
+        <button class="theme-btn" title="모던" onclick="changeTheme('gray', this)">🎨</button>
       </div>
 
       <span class="status-badge" id="connBadge">🟢 연결됨</span>
@@ -278,18 +286,19 @@
 
       <div class="chat-input-row">
         <input type="text" id="chatInput" class="custom-input" placeholder="메시지 입력..." onkeypress="if(event.key==='Enter') sendMsg()">
-        <button class="btn-blue" style="width:70px;" onclick="sendMsg()">전송</button>
+        <button class="btn-blue" style="width:65px;" onclick="sendMsg()">전송</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 📱 하단 모바일 앱 설치 버튼 -->
+<!-- 📱 하단 모바일 앱 설치 및 공유 버튼 -->
 <div class="app-download-footer">
-  <div class="app-download-title">📱 스마트폰에 앱으로 설치하기</div>
+  <div class="app-download-title">📱 스마트폰 앱 설치 안내</div>
   <div class="app-btn-group">
     <button class="btn-app btn-app-ios" onclick="installApp('ios')">🍎 아이폰 앱 설치</button>
     <button class="btn-app btn-app-galaxy" onclick="installApp('galaxy')">🌌 갤럭시 앱 설치</button>
+    <button class="btn-app btn-app-kakao" onclick="shareKakaoGuide()">💬 카톡 공유 안내</button>
   </div>
 </div>
 
@@ -302,7 +311,7 @@
   let currentTopic = "";
   let currentRoomName = "";
   let chatHistory = [];
-  let deferredPrompt = null; // PWA 설치 프로프트 저장용
+  let deferredPrompt = null;
 
   const BASE_ANIMALS = [
     { name: "토끼", body: `<ellipse cx="38" cy="18" rx="7" ry="16" fill="#fff" stroke="#000" stroke-width="3"/><ellipse cx="62" cy="18" rx="7" ry="16" fill="#fff" stroke="#000" stroke-width="3"/><path d="M 22,58 C 20,38 80,38 78,58 C 80,78 20,78 22,58 Z" fill="#fff" stroke="#000" stroke-width="4"/>` },
@@ -357,11 +366,23 @@
     document.getElementById('chatList').innerHTML = `<div style="text-align:center; color:#64748b; font-size:0.85rem; padding:16px;">👈 왼쪽 메뉴에서 새 채팅방을 만들거나<br>생성된 방 목록을 선택해서 대화를 시작해보세요!</div>`;
   };
 
-  // Android/Galaxy 자동 설치 프로프트 감지
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
   });
+
+  /* 🎨 캐릭터 커스텀 영역 접기 / 펼치기 */
+  function toggleCustomSection() {
+    const area = document.getElementById('customFoldableArea');
+    const btn = document.getElementById('toggleCustomBtn');
+    if (area.style.display === 'none') {
+      area.style.display = 'block';
+      btn.innerText = '▲ 메뉴 접기';
+    } else {
+      area.style.display = 'none';
+      btn.innerText = '▼ 메뉴 펼치기';
+    }
+  }
 
   function changeTheme(themeName, btn) {
     document.body.className = `theme-${themeName}`;
@@ -425,7 +446,6 @@
     document.getElementById('chatList').innerHTML = `<div style="text-align:center; color:#64748b; font-size:0.85rem; padding:8px; font-weight:bold;">🏠 [${escapeHtml(roomName)}] 방에 입장했습니다.</div>`;
   }
 
-  /* 🚪 현재 방 나가기 기능 */
   function leaveRoom(wasDeleted = false) {
     if (currentTopic) mqttClient.unsubscribe(currentTopic);
     
@@ -443,14 +463,11 @@
     document.getElementById('chatList').innerHTML = `<div style="text-align:center; color:#64748b; font-size:0.85rem; padding:16px;">${msg}<br>다른 방을 선택하거나 새 방을 만들어보세요.</div>`;
   }
 
-  /* 🗑️ 방 삭제하기 기능 */
   function deleteRoom(e, roomName) {
-    e.stopPropagation(); // 입장 이벤트 중복 실행 방지
+    e.stopPropagation();
     
     if (confirm(`정말로 '${roomName}' 방을 삭제하시겠습니까?`)) {
       activeRooms.delete(roomName);
-      
-      // 전체 공유 네트워크에 방 삭제 메시지 브로드캐스트
       mqttClient.publish(SYSTEM_TOPIC, JSON.stringify({ type: 'DELETE_ROOM', roomName: roomName }));
       
       if (currentRoomName === roomName) leaveRoom();
@@ -462,7 +479,7 @@
     const box = document.getElementById('roomListBox');
     
     if (activeRooms.size === 0) {
-      box.innerHTML = `<div style="font-size:0.75rem; color:#64748b; text-align:center; padding: 12px;">개설된 방이 없습니다.<br>새 방을 먼저 만들어 보세요!</div>`;
+      box.innerHTML = `<div style="font-size:0.75rem; color:#64748b; text-align:center; padding: 10px;">개설된 방이 없습니다.<br>새 방을 먼저 만들어 보세요!</div>`;
       return;
     }
 
@@ -548,23 +565,28 @@
     link.click();
   }
 
-  /* 📱 아이폰 / 갤럭시 구분 앱 설치 안내 이벤트 */
+  /* 📱 아이폰 / 갤럭시 앱 설치 안내 모달 */
   function installApp(os) {
     if (os === 'ios') {
-      alert("🍎 아이폰(iOS) 앱 설치 방법:\n\n1. Safari 브라우저 하단의 [공유] 버튼(네모 안의 화살표)을 누릅니다.\n2. 메뉴를 아래로 내려 [홈 화면에 추가]를 선택합니다.");
+      alert("🍎 [아이폰 앱 설치 가이드]\n\n1. Safari 브라우저 하단의 [공유] 버튼(네모 안의 화살표)을 누릅니다.\n2. [홈 화면에 추가]를 선택합니다.\n\n✨ 귀여운 아이콘으로 홈 화면에 설치됩니다!");
     } else if (os === 'galaxy') {
       if (deferredPrompt) {
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted the install prompt');
-          }
           deferredPrompt = null;
         });
       } else {
-        alert("🌌 갤럭시(Android) 앱 설치 방법:\n\n1. Chrome 브라우저 우측 상단 [⋮] 메뉴를 누릅니다.\n2. [앱 설치] 또는 [홈 화면에 추가]를 선택합니다.");
+        alert("🌌 [갤럭시 앱 설치 가이드]\n\n1. Chrome 브라우저 우측 상단 [⋮] 메뉴를 누릅니다.\n2. [앱 설치] 또는 [홈 화면에 추가]를 누릅니다.\n\n✨ 귀여운 아이콘으로 홈 화면에 설치됩니다!");
       }
     }
+  }
+
+  /* 💬 카카오톡 유저 안내용 기능 */
+  function shareKakaoGuide() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      alert("🔗 주소가 복사되었습니다!\n\n💡 카카오톡으로 주소를 공유받아 들어오셨다면:\n- 아이폰: 오른쪽 하단 [⋯] 클릭 ➔ [Safari로 열기] 후 앱 설치\n- 갤럭시: 오른쪽 상단 [⋮] 클릭 ➔ [다른 브라우저로 열기] 후 앱 설치");
+    });
   }
 
   function updateCustomAvatar() {
