@@ -3,23 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>동글동글 귀여운 채팅룸</title>
+  <title>Character Selector & Chat</title>
+  <!-- P2P 친구 실시간 연동 라이브러리 -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
-    :root {
-      --bg-color: #e0f2fe;
-      --card-bg: #ffffff;
-      --border-color: #1e293b;
-      --primary-color: #3b82f6;
-      --accent-color: #ffedd5;
-    }
-
     * {
       box-sizing: border-box;
-      font-family: 'Single Day', 'Gothic A1', 'Nanum Gothic', sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     body {
-      background-color: var(--bg-color);
+      background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 50%, #4ade80 50%, #22c55e 100%);
       margin: 0;
       padding: 20px;
       display: flex;
@@ -28,452 +22,618 @@
       min-height: 100vh;
     }
 
-    .container {
+    .main-wrapper {
       display: flex;
-      flex-direction: row;
-      gap: 20px;
+      gap: 16px;
       width: 100%;
-      max-width: 900px;
-      background: var(--card-bg);
-      border: 3px solid var(--border-color);
-      border-radius: 24px;
-      padding: 20px;
-      box-shadow: 6px 6px 0px var(--border-color);
+      max-width: 950px;
     }
 
-    /* Left Panel: Character Selection */
+    /* ==========================================
+       LEFT PANEL: Character Selector
+       ========================================== */
     .left-panel {
+      flex: 1.1;
+      background: #ffffff;
+      border: 3px solid #000;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      text-align: center;
+      margin: 0 0 12px 0;
+      color: #000;
+    }
+
+    /* Top Preview Area */
+    .preview-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .big-avatar-box {
+      width: 110px;
+      height: 110px;
+      background: #dbeafe;
+      border: 2px solid #000;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .big-avatar-box svg, .big-avatar-box img {
+      width: 85px;
+      height: 85px;
+      object-fit: cover;
+    }
+
+    .preview-controls {
       flex: 1;
       display: flex;
       flex-direction: column;
-      border-right: 2px dashed #cbd5e1;
-      padding-right: 20px;
+      justify-content: space-between;
     }
 
-    h2 {
-      margin-top: 0;
-      color: #0f172a;
-      font-size: 1.5rem;
-      text-align: center;
-      border-bottom: 3px solid var(--border-color);
-      padding-bottom: 8px;
-    }
-
-    .selected-preview {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: #f8fafc;
-      border: 2px solid var(--border-color);
-      border-radius: 16px;
-      padding: 15px;
-      margin-bottom: 15px;
-    }
-
-    .selected-preview svg {
-      width: 80px;
-      height: 80px;
-    }
-
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      max-height: 280px;
-      overflow-y: auto;
-      padding: 5px;
-    }
-
-    .char-card {
-      background: #fff;
-      border: 2px solid var(--border-color);
-      border-radius: 12px;
-      padding: 8px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      transition: all 0.15s ease;
-    }
-
-    .char-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 3px 3px 0px var(--border-color);
-    }
-
-    .char-card.active {
-      background-color: var(--accent-color);
-      border-width: 3px;
-      box-shadow: 3px 3px 0px var(--border-color);
-    }
-
-    .char-card svg {
-      width: 45px;
-      height: 45px;
-    }
-
-    .char-name {
+    .input-label {
       font-size: 0.85rem;
       font-weight: bold;
-      margin-top: 4px;
+      margin-bottom: 4px;
     }
 
-    .input-group {
-      margin-top: 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    label {
-      font-weight: bold;
-      font-size: 0.9rem;
-    }
-
-    input[type="text"] {
-      border: 2px solid var(--border-color);
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 1rem;
+    .custom-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 2px solid #000;
+      border-radius: 8px;
+      font-size: 0.95rem;
       outline: none;
     }
 
-    button {
-      background: var(--primary-color);
+    .btn-blue {
+      background: #2563eb;
       color: white;
-      border: 2px solid var(--border-color);
-      border-radius: 10px;
-      padding: 10px;
       font-weight: bold;
-      font-size: 1rem;
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding: 10px;
       cursor: pointer;
-      box-shadow: 2px 2px 0px var(--border-color);
-      transition: all 0.1s;
+      font-size: 1rem;
+      text-align: center;
     }
 
-    button:active {
-      transform: translate(2px, 2px);
-      box-shadow: none;
-    }
+    .btn-blue:active { background: #1d4ed8; }
 
-    /* Right Panel: Chat Log */
-    .right-panel {
-      flex: 1.2;
+    .nav-btns {
       display: flex;
-      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
     }
 
-    .chat-box {
+    .btn-gray {
       flex: 1;
-      border: 2px solid var(--border-color);
-      border-radius: 16px;
-      background: #f1f5f9;
-      padding: 12px;
+      background: #64748b;
+      color: white;
+      border: 2px solid #000;
+      border-radius: 6px;
+      padding: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Multi-functional Tabs (기본 / 그리기 / 사진 업로드 / 친구연동) */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 5px 2px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      background: #e2e8f0;
+      border: 2px solid #000;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .tab-btn.active { background: #fde047; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Character Grid */
+    .grid-box {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      background: #eff6ff;
+      border: 2px solid #000;
+      border-radius: 12px;
+      padding: 8px;
+      max-height: 240px;
       overflow-y: auto;
-      height: 350px;
+    }
+
+    .grid-item {
+      position: relative;
+      background: #fff;
+      border: 2px solid #000;
+      border-radius: 8px;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .grid-item.active {
+      background: #bfdbfe;
+      border-width: 3px;
+    }
+
+    .grid-item svg, .grid-item img {
+      width: 80%;
+      height: 80%;
+    }
+
+    .grid-num {
+      position: absolute;
+      top: 1px;
+      left: 3px;
+      font-size: 0.65rem;
+      font-weight: bold;
+      color: #000;
+    }
+
+    /* Drawing Canvas */
+    #drawCanvas {
+      border: 2px solid #000;
+      border-radius: 8px;
+      background: #fff;
+      cursor: crosshair;
+      display: block;
+      margin: 0 auto;
+      touch-action: none;
+    }
+
+    /* Connection Box */
+    .peer-box {
+      background: #f8fafc;
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.8rem;
+    }
+
+    /* ==========================================
+       RIGHT PANEL: Chat History
+       ========================================== */
+    .right-panel {
+      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    .chat-item {
+    .top-status-bar {
+      background: #fff;
+      border: 3px solid #000;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .chat-container {
+      flex: 1;
+      background: #fff;
+      border: 3px solid #000;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin: 0 0 10px 0;
+    }
+
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      height: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 4px;
+    }
+
+    /* Chat Message Bubbles */
+    .chat-msg {
       display: flex;
       align-items: flex-start;
       gap: 8px;
     }
 
-    .chat-avatar svg {
-      width: 36px;
-      height: 36px;
-      border: 2px solid var(--border-color);
-      border-radius: 50%;
-      background: white;
+    .chat-msg.self {
+      flex-direction: row-reverse;
     }
 
-    .chat-content {
-      background: white;
-      border: 2px solid var(--border-color);
-      border-radius: 12px;
-      padding: 8px 12px;
-      max-width: 80%;
-      box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+    .msg-avatar {
+      width: 40px;
+      height: 40px;
+      background: #dbeafe;
+      border: 2px solid #000;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .chat-user {
+    .msg-avatar svg, .msg-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .msg-body {
+      max-width: 75%;
+    }
+
+    .msg-user {
       font-size: 0.8rem;
       font-weight: bold;
-      color: #64748b;
       margin-bottom: 2px;
     }
 
-    .chat-text {
-      font-size: 0.95rem;
-      word-break: break-word;
+    .chat-msg.self .msg-user { text-align: right; }
+
+    .msg-bubble {
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      background: #cbd5e1;
+      position: relative;
     }
 
-    .chat-input-area {
+    .chat-msg.other-1 .msg-bubble { background: #fed7aa; } /* 주황 말풍선 */
+    .chat-msg.other-2 .msg-bubble { background: #fecdd3; } /* 분홍 말풍선 */
+    .chat-msg.self .msg-bubble { background: #bae6fd; }    /* 파랑 말풍선 */
+
+    .chat-input-row {
       display: flex;
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
-    .chat-input-area input {
-      flex: 1;
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 640px) {
-      .container {
-        flex-direction: column;
-      }
-      .left-panel {
-        border-right: none;
-        border-bottom: 2px dashed #cbd5e1;
-        padding-right: 0;
-        padding-bottom: 20px;
-      }
+    @media (max-width: 768px) {
+      .main-wrapper { flex-direction: column; }
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <!-- 캐릭터 선택 패널 -->
+<div class="main-wrapper">
+  <!-- 좌측: Character Selector -->
   <div class="left-panel">
-    <h2>캐릭터 선택</h2>
-    
-    <div class="selected-preview">
-      <div id="previewAvatar"></div>
-      <div id="previewName" style="font-weight: bold; margin-top: 6px;">선택된 캐릭터</div>
+    <h2 class="panel-title">Character Selector</h2>
+
+    <!-- 상단 미리보기 & 이름 변경 -->
+    <div class="preview-container">
+      <div class="big-avatar-box" id="mainPreviewBox"></div>
+      <div class="preview-controls">
+        <div>
+          <div class="input-label">Character Name</div>
+          <input type="text" id="nameInput" class="custom-input" value="Marshmallow">
+        </div>
+        <button class="btn-blue" onclick="saveName()">Save Name</button>
+      </div>
     </div>
 
-    <div class="grid-container" id="characterGrid">
-      <!-- 캐릭터들이 JS로 동적 생성됩니다 -->
+    <!-- 이전/다음 버튼 -->
+    <div class="nav-btns">
+      <button class="btn-gray" onclick="navCharacter(-1)">Prev</button>
+      <button class="btn-blue" style="flex:1; padding:4px;" onclick="navCharacter(1)">Next</button>
     </div>
 
-    <div class="input-group">
-      <label for="nicknameInput">사용자 이름</label>
-      <input type="text" id="nicknameInput" value="귀여운탐험가_7">
-      <button onclick="updateProfile()">프로필 적용</button>
+    <!-- 추가 기능 탭 (기본 캐릭터, 그리기, 사진 업로드, 친구 연결) -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="setTab('grid')">캐릭터목록</button>
+      <button class="tab-btn" onclick="setTab('draw')">직접그리기</button>
+      <button class="tab-btn" onclick="setTab('upload')">사진업로드</button>
+      <button class="tab-btn" onclick="setTab('peer')">친구연동</button>
+    </div>
+
+    <!-- 1. 그리드 선택 -->
+    <div id="tab-grid" class="tab-content active">
+      <div class="grid-box" id="characterGrid"></div>
+    </div>
+
+    <!-- 2. 직접 그리기 -->
+    <div id="tab-draw" class="tab-content">
+      <canvas id="drawCanvas" width="130" height="130"></canvas>
+      <div style="display:flex; gap:4px; margin-top:6px; justify-content:center;">
+        <input type="color" id="penColor" value="#000000">
+        <button class="btn-gray" onclick="clearCanvas()">지우기</button>
+        <button class="btn-blue" style="padding:2px 8px; font-size:0.8rem;" onclick="applyDrawing()">적용</button>
+      </div>
+    </div>
+
+    <!-- 3. 사진 업로드 -->
+    <div id="tab-upload" class="tab-content">
+      <input type="file" accept="image/*" class="custom-input" onchange="uploadImage(event)">
+    </div>
+
+    <!-- 4. 친구 연동 (PeerJS) -->
+    <div id="tab-peer" class="tab-content">
+      <div class="peer-box">
+        <div>내 코드: <b id="myPeerId" style="color:#2563eb;">생성 중...</b></div>
+        <div style="display:flex; gap:4px; margin-top:4px;">
+          <input type="text" id="friendIdInput" class="custom-input" placeholder="친구 코드" style="padding:4px;">
+          <button class="btn-blue" style="padding:4px 8px; font-size:0.8rem;" onclick="connectFriend()">연결</button>
+        </div>
+        <div id="connStatus" style="color:#16a34a; font-weight:bold; margin-top:4px;"></div>
+      </div>
     </div>
   </div>
 
-  <!-- 채팅 로그 패널 -->
+  <!-- 우측: Chat History -->
   <div class="right-panel">
-    <h2>채팅 로그</h2>
-    
-    <div class="chat-box" id="chatBox">
-      <!-- 기본 샘플 메시지 -->
-      <div class="chat-item">
-        <div class="chat-avatar" id="sampleAvatar1"></div>
-        <div class="chat-content">
-          <div class="chat-user">사과_팬</div>
-          <div class="chat-text">안녕하세요! 아바타가 너무 귀여워요!</div>
-        </div>
-      </div>
-      <div class="chat-item">
-        <div class="chat-avatar" id="sampleAvatar2"></div>
-        <div class="chat-content">
-          <div class="chat-user">햄스터사랑</div>
-          <div class="chat-text">우와! 전 햄스터로 골랐어요! 🐹</div>
-        </div>
-      </div>
+    <div class="top-status-bar">
+      Character: <span id="topCharName">Marshmallow</span>
     </div>
 
-    <div class="chat-input-area">
-      <input type="text" id="chatMessageInput" placeholder="메시지 입력..." onkeypress="handleKeyPress(event)">
-      <button onclick="sendChatMessage()">전송</button>
+    <div class="chat-container">
+      <h3 class="chat-title">Chat History</h3>
+      
+      <div class="chat-list" id="chatList">
+        <!-- 원본 이미지 스타일의 초기 메시지 샘플 -->
+        <div class="chat-msg">
+          <div class="msg-avatar" id="samplePanda"></div>
+          <div class="msg-body">
+            <div class="msg-user">Explorer_01</div>
+            <div class="msg-bubble">Hello! This world is so cute.</div>
+          </div>
+        </div>
+
+        <div class="chat-msg other-1" style="flex-direction:row-reverse;">
+          <div class="msg-avatar" id="sampleFox"></div>
+          <div class="msg-body" style="align-items:flex-end;">
+            <div class="msg-user" style="text-align:right;">Foxy</div>
+            <div class="msg-bubble">I love your rabbit character!</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" class="custom-input" placeholder="메시지 입력..." onkeypress="if(event.key==='Enter') sendMsg()">
+        <button class="btn-blue" style="width:70px;" onclick="sendMsg()">전송</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-  // SVG 캐릭터 데이터
-  const characters = [
-    {
-      id: 1,
-      name: "사과곰",
-      svg: `<svg viewBox="0 0 100 100">
-        <circle cx="50" cy="55" r="35" fill="#ff4d4d" stroke="#1e293b" stroke-width="4"/>
-        <path d="M50 20 Q55 10 60 15" stroke="#1e293b" stroke-width="4" fill="none"/>
-        <ellipse cx="40" cy="50" rx="4" ry="6" fill="#1e293b"/>
-        <ellipse cx="60" cy="50" rx="4" ry="6" fill="#1e293b"/>
-        <path d="M46 58 Q50 63 54 58" stroke="#1e293b" stroke-width="3" fill="none"/>
-        <circle cx="33" cy="56" r="5" fill="#ffb3b3"/>
-        <circle cx="67" cy="56" r="5" fill="#ffb3b3"/>
-      </svg>`
-    },
-    {
-      id: 2,
-      name: "바나나원숭이",
-      svg: `<svg viewBox="0 0 100 100">
-        <path d="M20 70 Q50 15 80 70 Q50 95 20 70 Z" fill="#ffe135" stroke="#1e293b" stroke-width="4"/>
-        <circle cx="50" cy="55" r="22" fill="#fff3a0" stroke="#1e293b" stroke-width="3"/>
-        <circle cx="43" cy="52" r="3" fill="#1e293b"/>
-        <circle cx="57" cy="52" r="3" fill="#1e293b"/>
-        <path d="M46 60 Q50 64 54 60" stroke="#1e293b" stroke-width="3" fill="none"/>
-      </svg>`
-    },
-    {
-      id: 3,
-      name: "햄스터",
-      svg: `<svg viewBox="0 0 100 100">
-        <circle cx="50" cy="55" r="32" fill="#f97316" stroke="#1e293b" stroke-width="4"/>
-        <circle cx="50" cy="58" r="22" fill="#ffedd5"/>
-        <ellipse cx="40" cy="50" rx="3" ry="5" fill="#1e293b"/>
-        <ellipse cx="60" cy="50" rx="3" ry="5" fill="#1e293b"/>
-        <path d="M47 56 Q50 60 53 56" stroke="#1e293b" stroke-width="3" fill="none"/>
-        <circle cx="34" cy="56" r="6" fill="#fca5a5"/>
-        <circle cx="66" cy="56" r="6" fill="#fca5a5"/>
-      </svg>`
-    },
-    {
-      id: 4,
-      name: "귀여운 흑곰", // 4번: 요구사항에 부합하는 차 마시는 흑곰 캐릭터
-      svg: `<svg viewBox="0 0 100 100">
-        <circle cx="30" cy="30" r="10" fill="#334155" stroke="#1e293b" stroke-width="4"/>
-        <circle cx="70" cy="30" r="10" fill="#334155" stroke="#1e293b" stroke-width="4"/>
-        <circle cx="50" cy="55" r="34" fill="#334155" stroke="#1e293b" stroke-width="4"/>
-        <ellipse cx="50" cy="62" rx="16" ry="12" fill="#f8fafc"/>
-        <ellipse cx="40" cy="50" rx="3" ry="5" fill="#1e293b"/>
-        <ellipse cx="60" cy="50" rx="3" ry="5" fill="#1e293b"/>
-        <ellipse cx="50" cy="58" rx="4" ry="3" fill="#1e293b"/>
-        <circle cx="33" cy="56" r="5" fill="#f43f5e"/>
-        <circle cx="67" cy="56" r="5" fill="#f43f5e"/>
-        <!-- 찻잔 -->
-        <rect x="58" y="68" width="16" height="12" rx="3" fill="#ffffff" stroke="#1e293b" stroke-width="3"/>
-        <path d="M74 71 Q78 74 74 77" stroke="#1e293b" stroke-width="3" fill="none"/>
-      </svg>`
-    },
-    {
-      id: 5,
-      name: "토끼",
-      svg: `<svg viewBox="0 0 100 100">
-        <ellipse cx="40" cy="25" rx="8" ry="20" fill="#ffffff" stroke="#1e293b" stroke-width="4"/>
-        <ellipse cx="60" cy="25" rx="8" ry="20" fill="#ffffff" stroke="#1e293b" stroke-width="4"/>
-        <circle cx="50" cy="60" r="30" fill="#ffffff" stroke="#1e293b" stroke-width="4"/>
-        <circle cx="42" cy="55" r="3.5" fill="#1e293b"/>
-        <circle cx="58" cy="55" r="3.5" fill="#1e293b"/>
-        <path d="M47 62 Q50 66 53 62" stroke="#1e293b" stroke-width="3" fill="none"/>
-        <circle cx="34" cy="60" r="5" fill="#f472b6"/>
-        <circle cx="66" cy="60" r="5" fill="#f472b6"/>
-      </svg>`
-    },
-    {
-      id: 6,
-      name: "강아지",
-      svg: `<svg viewBox="0 0 100 100">
-        <ellipse cx="22" cy="50" rx="10" ry="18" fill="#d97706" stroke="#1e293b" stroke-width="4"/>
-        <ellipse cx="78" cy="50" rx="10" ry="18" fill="#d97706" stroke="#1e293b" stroke-width="4"/>
-        <circle cx="50" cy="55" r="32" fill="#fef3c7" stroke="#1e293b" stroke-width="4"/>
-        <circle cx="40" cy="50" rx="3" ry="5" fill="#1e293b"/>
-        <circle cx="60" cy="50" rx="3" ry="5" fill="#1e293b"/>
-        <ellipse cx="50" cy="58" rx="5" ry="4" fill="#1e293b"/>
-        <path d="M50 62 L50 67" stroke="#1e293b" stroke-width="3"/>
-      </svg>`
-    }
+  // 이미지 속 귀여운 동글동글 캐릭터 SVG 리스트 (30개 대표 목록)
+  const SVG_LIST = [
+    // 1. 토끼 (마시멜로 기본)
+    `<svg viewBox="0 0 100 100"><ellipse cx="40" cy="20" rx="7" ry="18" fill="#fff" stroke="#000" stroke-width="4"/><ellipse cx="60" cy="20" rx="7" ry="18" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="50" cy="58" r="30" fill="#fff" stroke="#000" stroke-width="4"/><circle cx="42" cy="54" r="3" fill="#000"/><circle cx="58" cy="54" r="3" fill="#000"/><path d="M46 62 Q50 66 54 62" stroke="#000" stroke-width="3" fill="none"/></svg>`,
+    // 2. 팬더
+    `<svg viewBox="0 0 100 100"><circle cx="28" cy="30" r="10" fill="#000"/><circle cx="72" cy="30" r="10" fill="#000"/><circle cx="50" cy="55" r="32" fill="#fff" stroke="#000" stroke-width="4"/><ellipse cx="38" cy="52" rx="6" ry="8" fill="#000"/><ellipse cx="62" cy="52" rx="6" ry="8" fill="#000"/><path d="M46 62 Q50 65 54 62" stroke="#000" stroke-width="3" fill="none"/></svg>`,
+    // 3. 고양이
+    `<svg viewBox="0 0 100 100"><polygon points="25,30 38,45 20,50" fill="#94a3b8" stroke="#000" stroke-width="3"/><polygon points="75,30 62,45 80,50" fill="#94a3b8" stroke="#000" stroke-width="3"/><circle cx="50" cy="55" r="30" fill="#94a3b8" stroke="#000" stroke-width="4"/><ellipse cx="40" cy="52" rx="3" ry="5" fill="#000"/><ellipse cx="60" cy="52" rx="3" ry="5" fill="#000"/></svg>`,
+    // 4. 햄스터
+    `<svg viewBox="0 0 100 100"><circle cx="50" cy="55" r="32" fill="#f97316" stroke="#000" stroke-width="4"/><circle cx="50" cy="58" r="22" fill="#ffedd5"/><ellipse cx="40" cy="50" rx="3" ry="5" fill="#000"/><ellipse cx="60" cy="50" rx="3" ry="5" fill="#000"/></svg>`,
+    // 5. 강아지
+    `<svg viewBox="0 0 100 100"><ellipse cx="22" cy="50" rx="10" ry="18" fill="#fbbf24" stroke="#000" stroke-width="4"/><ellipse cx="78" cy="50" rx="10" ry="18" fill="#fbbf24" stroke="#000" stroke-width="4"/><circle cx="50" cy="55" r="30" fill="#fef08a" stroke="#000" stroke-width="4"/><circle cx="40" cy="50" r="3" fill="#000"/><circle cx="60" cy="50" r="3" fill="#000"/></svg>`,
+    // 6. 여우
+    `<svg viewBox="0 0 100 100"><polygon points="25,25 40,45 15,45" fill="#ea580c" stroke="#000" stroke-width="3"/><polygon points="75,25 60,45 85,45" fill="#ea580c" stroke="#000" stroke-width="3"/><circle cx="50" cy="55" r="30" fill="#ea580c" stroke="#000" stroke-width="4"/><polygon points="50,75 40,55 60,55" fill="#fff"/></svg>`,
+    // 7. 돼지
+    `<svg viewBox="0 0 100 100"><circle cx="50" cy="55" r="30" fill="#f472b6" stroke="#000" stroke-width="4"/><ellipse cx="50" cy="58" rx="8" ry="6" fill="#fbcfe8" stroke="#000" stroke-width="2"/><circle cx="47" cy="58" r="1.5" fill="#000"/><circle cx="53" cy="58" r="1.5" fill="#000"/></svg>`,
+    // 8. 젖소
+    `<svg viewBox="0 0 100 100"><circle cx="50" cy="55" r="30" fill="#fff" stroke="#000" stroke-width="4"/><path d="M30 35 Q40 30 45 45 Z" fill="#000"/><ellipse cx="50" cy="62" rx="10" ry="6" fill="#fbcfe8" stroke="#000" stroke-width="2"/></svg>`,
+    // 9. 악마/뿔 캐릭터
+    `<svg viewBox="0 0 100 100"><path d="M30 30 L20 15 L35 25 Z" fill="#ef4444"/><path d="M70 30 L80 15 L65 25 Z" fill="#ef4444"/><circle cx="50" cy="55" r="30" fill="#ef4444" stroke="#000" stroke-width="4"/></svg>`,
+    // 10. 곰 (차 마시는 흑곰)
+    `<svg viewBox="0 0 100 100"><circle cx="28" cy="30" r="8" fill="#334155" stroke="#000" stroke-width="3"/><circle cx="72" cy="30" r="8" fill="#334155" stroke="#000" stroke-width="3"/><circle cx="50" cy="55" r="30" fill="#334155" stroke="#000" stroke-width="4"/><rect x="58" y="65" width="14" height="10" rx="2" fill="#fff" stroke="#000" stroke-width="2"/></svg>`
   ];
 
-  let selectedCharacter = characters[3]; // 기본으로 4번 흑곰 선택
-  let username = "귀여운탐험가_7";
+  let currentIndex = 0;
+  let currentAvatar = { type: 'svg', data: SVG_LIST[0] };
+  let charName = "Marshmallow";
+  let peer = null, conn = null;
 
-  // 초기화 함수
-  function init() {
+  // 1. 초기화
+  window.onload = () => {
+    renderGrid();
+    selectCharacter(0);
+    initCanvas();
+    initPeer();
+
+    // 샘플 메시지 캐릭터 설정
+    document.getElementById('samplePanda').innerHTML = SVG_LIST[1];
+    document.getElementById('sampleFox').innerHTML = SVG_LIST[5];
+  };
+
+  // 2. 그리드 생성
+  function renderGrid() {
     const grid = document.getElementById('characterGrid');
     grid.innerHTML = '';
+    
+    // 30개 항목 생성 (기본 SVG 반복 구성)
+    for (let i = 0; i < 30; i++) {
+      const svgData = SVG_LIST[i % SVG_LIST.length];
+      const item = document.createElement('div');
+      item.className = `grid-item ${i === currentIndex ? 'active' : ''}`;
+      item.onclick = () => selectCharacter(i);
+      item.innerHTML = `<span class="grid-num">${i + 1}</span>${svgData}`;
+      grid.appendChild(item);
+    }
+  }
 
-    characters.forEach(char => {
-      const card = document.createElement('div');
-      card.className = `char-card ${char.id === selectedCharacter.id ? 'active' : ''}`;
-      card.onclick = () => selectCharacter(char);
-      card.innerHTML = `
-        ${char.svg}
-        <div class="char-name">${char.name}</div>
-      `;
-      grid.appendChild(card);
+  function selectCharacter(index) {
+    currentIndex = index;
+    currentAvatar = { type: 'svg', data: SVG_LIST[index % SVG_LIST.length] };
+    
+    document.querySelectorAll('.grid-item').forEach((el, idx) => {
+      el.classList.toggle('active', idx === index);
     });
-
-    // 샘플 프로필 설정
-    document.getElementById('sampleAvatar1').innerHTML = characters[0].svg;
-    document.getElementById('sampleAvatar2').innerHTML = characters[2].svg;
 
     updatePreview();
   }
 
-  function selectCharacter(char) {
-    selectedCharacter = char;
-    
-    // 카드 활성화 표시 전환
-    document.querySelectorAll('.char-card').forEach((card, index) => {
-      if (characters[index].id === char.id) {
-        card.classList.add('active');
-      } else {
-        card.classList.remove('active');
-      }
-    });
-
-    updatePreview();
+  function navCharacter(dir) {
+    let next = currentIndex + dir;
+    if (next < 0) next = 29;
+    if (next > 29) next = 0;
+    selectCharacter(next);
   }
 
   function updatePreview() {
-    document.getElementById('previewAvatar').innerHTML = selectedCharacter.svg;
-    document.getElementById('previewName').innerText = selectedCharacter.name;
-  }
-
-  function updateProfile() {
-    const input = document.getElementById('nicknameInput').value.trim();
-    if (input) {
-      username = input;
-      alert(`프로필이 업데이트되었습니다! 이름: ${username}`);
+    const box = document.getElementById('mainPreviewBox');
+    if (currentAvatar.type === 'svg') {
+      box.innerHTML = currentAvatar.data;
+    } else {
+      box.innerHTML = `<img src="${currentAvatar.data}">`;
     }
   }
 
-  function sendChatMessage() {
-    const msgInput = document.getElementById('chatMessageInput');
-    const text = msgInput.value.trim();
+  function saveName() {
+    const val = document.getElementById('nameInput').value.trim();
+    if (val) {
+      charName = val;
+      document.getElementById('topCharName').innerText = charName;
+    }
+  }
 
+  // 3. 탭 기능 전환
+  function setTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    document.getElementById(`tab-${tab}`).classList.add('active');
+  }
+
+  // 4. 직접 그리기 (Canvas)
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+  let isDrawing = false;
+
+  function initCanvas() {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    canvas.addEventListener('mousedown', () => isDrawing = true);
+    canvas.addEventListener('mouseup', () => { isDrawing = false; ctx.beginPath(); });
+    canvas.addEventListener('mousemove', draw);
+  }
+
+  function draw(e) {
+    if (!isDrawing) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = document.getElementById('penColor').value;
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+  }
+
+  function clearCanvas() { ctx.fillRect(0, 0, canvas.width, canvas.height); }
+
+  function applyDrawing() {
+    currentAvatar = { type: 'img', data: canvas.toDataURL() };
+    updatePreview();
+  }
+
+  // 5. 사진 업로드
+  function uploadImage(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        currentAvatar = { type: 'img', data: evt.target.result };
+        updatePreview();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // 6. 친구 실시간 연동 (PeerJS)
+  function initPeer() {
+    peer = new Peer();
+    peer.on('open', id => document.getElementById('myPeerId').innerText = id);
+    peer.on('connection', c => { conn = c; listenChat(); });
+  }
+
+  function connectFriend() {
+    const friendId = document.getElementById('friendIdInput').value.trim();
+    if (!friendId) return;
+    conn = peer.connect(friendId);
+    listenChat();
+  }
+
+  function listenChat() {
+    conn.on('open', () => document.getElementById('connStatus').innerText = "🟢 연결 성공!");
+    conn.on('data', data => addMessage(data.user, data.avatar, data.text, false));
+  }
+
+  // 7. 채팅 메시지 전송
+  function sendMsg() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
     if (!text) return;
 
-    const chatBox = document.getElementById('chatBox');
-    
-    // 새로운 메시지 요소 생성
-    const chatItem = document.createElement('div');
-    chatItem.className = 'chat-item';
-    chatItem.innerHTML = `
-      <div class="chat-avatar">${selectedCharacter.svg}</div>
-      <div class="chat-content">
-        <div class="chat-user">${username}</div>
-        <div class="chat-text">${escapeHtml(text)}</div>
+    addMessage(charName, currentAvatar, text, true);
+
+    if (conn && conn.open) {
+      conn.send({ user: charName, avatar: currentAvatar, text: text });
+    }
+
+    input.value = '';
+  }
+
+  function addMessage(user, avatar, text, isSelf) {
+    const list = document.getElementById('chatList');
+    const msg = document.createElement('div');
+    msg.className = `chat-msg ${isSelf ? 'self' : 'other-1'}`;
+
+    const avatarHtml = avatar.type === 'svg' ? avatar.data : `<img src="${avatar.data}">`;
+
+    msg.innerHTML = `
+      <div class="msg-avatar">${avatarHtml}</div>
+      <div class="msg-body">
+        <div class="msg-user">${user}</div>
+        <div class="msg-bubble">${escapeHtml(text)}</div>
       </div>
     `;
 
-    chatBox.appendChild(chatItem);
-    msgInput.value = '';
-    
-    // 자동 스크롤 하단 이동
-    chatBox.scrollTop = chatBox.scrollHeight;
+    list.appendChild(msg);
+    list.scrollTop = list.scrollHeight;
   }
 
-  function handleKeyPress(e) {
-    if (e.key === 'Enter') {
-      sendChatMessage();
-    }
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
   }
-
-  function escapeHtml(string) {
-    return String(string).replace(/[&<>"']/g, function (s) {
-      return {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      }[s];
-    });
-  }
-
-  // 실행 시작
-  init();
 </script>
 
 </body>
