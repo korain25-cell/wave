@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>실시간 다자간 멀티 채팅룸</title>
-  <!-- Firebase SDK (서버 없이 실시간 공유) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <title>실시간 멀티 커스텀 채팅룸</title>
+  <!-- 무료 실시간 통신 라이브러리 (MQTT) -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   
   <style>
     * { box-sizing: border-box; font-family: 'Gothic A1', 'Nanum Gothic', sans-serif; }
@@ -26,7 +25,6 @@
     .big-avatar-box {
       width: 120px; height: 120px; background: #e0f2fe; border: 3px solid #000;
       border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
-      position: relative;
     }
     .big-avatar-box svg, .big-avatar-box img { width: 100px; height: 100px; object-fit: cover; }
     
@@ -52,7 +50,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     
-    /* 커스텀 선택 메뉴들 */
     .custom-select-group { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px; }
     .custom-row { display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 6px 10px; border: 2px solid #000; border-radius: 8px; }
     .custom-row label { font-size: 0.85rem; font-weight: bold; }
@@ -71,11 +68,12 @@
 
     #drawCanvas { border: 2px solid #000; border-radius: 8px; background: #fff; cursor: crosshair; display: block; margin: 0 auto; touch-action: none; }
     
-    .room-box { background: #f8fafc; border: 2px solid #000; border-radius: 8px; padding: 10px; font-size: 0.85rem; }
+    .room-box { background: #f8fafc; border: 2px solid #000; border-radius: 8px; padding: 10px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; }
 
-    /* 우측 채팅 */
     .right-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-    .top-status-bar { background: #fff; border: 3px solid #000; border-radius: 10px; padding: 8px 12px; font-weight: bold; font-size: 1.1rem; display: flex; justify-content: space-between; }
+    .top-status-bar { background: #fff; border: 3px solid #000; border-radius: 10px; padding: 8px 12px; font-weight: bold; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    .status-badge { background: #22c55e; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
+
     .chat-container { flex: 1; background: #fff; border: 3px solid #000; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; }
     .chat-title { font-size: 1.2rem; font-weight: 800; margin: 0 0 10px 0; }
     
@@ -127,7 +125,7 @@
       <button class="tab-btn" onclick="setTab('upload')">사진 업로드</button>
     </div>
 
-    <!-- 1. 커스텀 탭 (표정, 모자, 옷, 장신구) -->
+    <!-- 1. 커스텀 탭 -->
     <div id="tab-custom" class="tab-content active">
       <div class="custom-select-group">
         <div class="custom-row">
@@ -190,23 +188,29 @@
       <input type="file" accept="image/*" class="custom-input" onchange="uploadImage(event)">
     </div>
 
-    <!-- 방 접속 설정 -->
+    <!-- 방 접속 & 비밀번호 설정 -->
     <div style="margin-top:10px;">
       <div class="room-box">
-        <div class="input-label">🔑 채팅방 번호 (같은 번호끼리 연동됨)</div>
-        <div style="display:flex; gap:4px;">
-          <input type="number" id="roomInput" class="custom-input" placeholder="예: 1234" value="1234">
-          <button class="btn-blue" style="width:90px;" onclick="joinRoom()">입장하기</button>
+        <div style="display:flex; gap:6px;">
+          <div style="flex:1;">
+            <div class="input-label">🔑 방 번호</div>
+            <input type="number" id="roomInput" class="custom-input" placeholder="예: 1234" value="1234">
+          </div>
+          <div style="flex:1;">
+            <div class="input-label">🔒 비밀번호</div>
+            <input type="password" id="pwInput" class="custom-input" placeholder="비밀번호" value="0000">
+          </div>
         </div>
+        <button class="btn-blue" style="width:100%; margin-top:4px;" onclick="joinRoom()">방 입장하기</button>
       </div>
     </div>
   </div>
 
-  <!-- 우측: 실시간 다자간 채팅창 -->
+  <!-- 우측: 실시간 채팅창 -->
   <div class="right-panel">
     <div class="top-status-bar">
-      <span>현재 방 번호: <b id="currentRoomText" style="color:#2563eb;">1234</b></span>
-      <span>접속자 수: <b id="userCountText" style="color:#16a34a;">1명</b></span>
+      <span>현재 방: <b id="currentRoomText" style="color:#2563eb;">1234번 방</b></span>
+      <span class="status-badge" id="connBadge">서버 연결 중...</span>
     </div>
 
     <div class="chat-container">
@@ -222,14 +226,14 @@
 </div>
 
 <script>
-  // Firebase 공용 데모 주소 연결 (서버 없이 전세계 어디서나 실시간 공유)
-  const firebaseConfig = {
-    databaseURL: "https://public-chat-room-default-rtdb.firebaseio.com/"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  // 공용 실시간 MQTT 웹소켓 서버 접속
+  const mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+  
+  // 내 고유 ID 생성 (내가 보낸 메시지 구분용)
+  const myClientId = 'user_' + Math.random().toString(36).substring(2, 9);
+  let currentTopic = "";
 
-  // 동물 베이스 템플릿 (토끼, 곰, 햄스터, 강아지, 고양이)
+  // 동물 베이스
   const BASE_ANIMALS = [
     { name: "토끼", body: `<ellipse cx="38" cy="18" rx="7" ry="16" fill="#fff" stroke="#000" stroke-width="3"/><ellipse cx="62" cy="18" rx="7" ry="16" fill="#fff" stroke="#000" stroke-width="3"/><path d="M 22,58 C 20,38 80,38 78,58 C 80,78 20,78 22,58 Z" fill="#fff" stroke="#000" stroke-width="4"/>` },
     { name: "곰", body: `<circle cx="28" cy="30" r="9" fill="#334155" stroke="#000" stroke-width="3"/><circle cx="72" cy="30" r="9" fill="#334155" stroke="#000" stroke-width="3"/><path d="M 20,58 C 18,36 82,36 80,58 C 82,80 18,80 20,58 Z" fill="#334155" stroke="#000" stroke-width="4"/><ellipse cx="50" cy="62" rx="14" ry="10" fill="#f8fafc"/>` },
@@ -238,7 +242,7 @@
     { name: "고양이", body: `<polygon points="22,25 38,45 15,45" fill="#94a3b8" stroke="#000" stroke-width="3"/><polygon points="78,25 62,45 85,45" fill="#94a3b8" stroke="#000" stroke-width="3"/><path d="M 20,58 C 18,38 82,38 80,58 C 82,80 18,80 20,58 Z" fill="#94a3b8" stroke="#000" stroke-width="4"/>` }
   ];
 
-  // 커스텀 레이어 요소들 (SVG)
+  // 커스텀 요소 (표정, 모자, 옷, 장신구)
   const FACES = {
     smile: `<circle cx="40" cy="52" r="3.5" fill="#000"/><circle cx="60" cy="52" r="3.5" fill="#000"/><path d="M 45 61 Q 50 66 55 61" stroke="#000" stroke-width="3" fill="none"/>`,
     wink: `<path d="M 35 52 L 45 52" stroke="#000" stroke-width="3"/><circle cx="60" cy="52" r="3.5" fill="#000"/><path d="M 45 61 Q 50 66 55 61" stroke="#000" stroke-width="3" fill="none"/>`,
@@ -269,23 +273,90 @@
   };
 
   let selectedBaseIdx = 0;
-  let currentAvatar = { type: 'custom' };
-  let currentRoom = "1234";
-  let myName = "귀여운유저_" + Math.floor(Math.random()*100);
-  let roomRef = null;
+  let currentAvatar = { type: 'svg' };
+  let myName = "유저_" + Math.floor(10 + Math.random() * 90);
 
   window.onload = () => {
-    // 중복 방지를 위한 랜덤 기본 캐릭터 고르기
     selectedBaseIdx = Math.floor(Math.random() * BASE_ANIMALS.length);
     document.getElementById('nameInput').value = myName;
 
     renderBaseGrid();
     updateCustomAvatar();
     initCanvas();
-    joinRoom(); // 기본 1234방 입장
   };
 
-  // 1. 커스텀 조합하여 SVG 생성
+  // 서버 연결 처리
+  mqttClient.on('connect', () => {
+    document.getElementById('connBadge').innerText = "🟢 실시간 연결됨";
+    joinRoom(); // 서버 연결 시 기본 방 바로 입장
+  });
+
+  // 메시지 수신 이벤트
+  mqttClient.on('message', (topic, message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      renderMessage(data.user, data.avatar, data.text, data.senderId === myClientId);
+    } catch(e) { console.error(e); }
+  });
+
+  // 방 입장 (방 번호 + 비밀번호 조합으로 보안 채널 생성)
+  function joinRoom() {
+    const roomNum = document.getElementById('roomInput').value.trim();
+    const roomPw = document.getElementById('pwInput').value.trim();
+
+    if (!roomNum) return alert("방 번호를 입력하세요!");
+    if (!roomPw) return alert("비밀번호를 입력하세요!");
+
+    // 기존 구독 해제 후 새 방 채널 구독
+    if (currentTopic) {
+      mqttClient.unsubscribe(currentTopic);
+    }
+
+    // 방 번호와 비밀번호를 조합한 고유 주제(Topic) 생성
+    currentTopic = `cute_chat_room_${roomNum}_pw_${roomPw}`;
+    mqttClient.subscribe(currentTopic);
+
+    document.getElementById('currentRoomText').innerText = `${roomNum}번 방`;
+    document.getElementById('chatList').innerHTML = `<div style="text-align:center; color:#64748b; font-size:0.85rem; padding:8px; font-weight:bold;">🔑 ${roomNum}번 방 (비밀번호 적용됨)에 입장했습니다.</div>`;
+  }
+
+  // 메시지 전송
+  function sendMsg() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const payload = {
+      senderId: myClientId,
+      user: myName,
+      avatar: currentAvatar,
+      text: text
+    };
+
+    // 실시간 서버로 전송
+    mqttClient.publish(currentTopic, JSON.stringify(payload));
+    input.value = '';
+  }
+
+  function renderMessage(user, avatar, text, isSelf) {
+    const list = document.getElementById('chatList');
+    const msg = document.createElement('div');
+    msg.className = `chat-msg ${isSelf ? 'self' : ''}`;
+    
+    const avatarHtml = avatar.type === 'svg' ? avatar.data : `<img src="${avatar.data}">`;
+
+    msg.innerHTML = `
+      <div class="msg-avatar">${avatarHtml}</div>
+      <div class="msg-body">
+        <div class="msg-user">${escapeHtml(user)}</div>
+        <div class="msg-bubble">${escapeHtml(text)}</div>
+      </div>
+    `;
+    list.appendChild(msg);
+    list.scrollTop = list.scrollHeight;
+  }
+
+  // 캐릭터 커스텀 로직
   function updateCustomAvatar() {
     const base = BASE_ANIMALS[selectedBaseIdx].body;
     const face = FACES[document.getElementById('selFace').value];
@@ -335,63 +406,7 @@
     document.getElementById(`tab-${tab}`).classList.add('active');
   }
 
-  // 2. 같은 방 번호 연동 (Firebase Realtime DB)
-  function joinRoom() {
-    const roomNum = document.getElementById('roomInput').value.trim();
-    if (!roomNum) return alert("방 번호를 입력하세요!");
-
-    currentRoom = roomNum;
-    document.getElementById('currentRoomText').innerText = currentRoom;
-    document.getElementById('chatList').innerHTML = '';
-
-    if (roomRef) roomRef.off(); // 이전 방 구독 해제
-
-    // 새로운 방 주소 수신 시작
-    roomRef = db.ref('rooms/' + currentRoom);
-    
-    // 메시지 수신 이벤트
-    roomRef.child('messages').limitToLast(50).on('child_added', snapshot => {
-      const data = snapshot.val();
-      renderMessage(data.user, data.avatar, data.text, data.user === myName);
-    });
-  }
-
-  // 3. 메시지 전송
-  function sendMsg() {
-    const input = document.getElementById('chatInput');
-    const text = input.value.trim();
-    if (!text) return;
-
-    // Firebase 데이터베이스로 메시지 발송
-    roomRef.child('messages').push({
-      user: myName,
-      avatar: currentAvatar,
-      text: text,
-      time: Date.now()
-    });
-
-    input.value = '';
-  }
-
-  function renderMessage(user, avatar, text, isSelf) {
-    const list = document.getElementById('chatList');
-    const msg = document.createElement('div');
-    msg.className = `chat-msg ${isSelf ? 'self' : ''}`;
-    
-    const avatarHtml = avatar.type === 'svg' ? avatar.data : `<img src="${avatar.data}">`;
-
-    msg.innerHTML = `
-      <div class="msg-avatar">${avatarHtml}</div>
-      <div class="msg-body">
-        <div class="msg-user">${escapeHtml(user)}</div>
-        <div class="msg-bubble">${escapeHtml(text)}</div>
-      </div>
-    `;
-    list.appendChild(msg);
-    list.scrollTop = list.scrollHeight;
-  }
-
-  // 4. 직접 그리기 & 업로드 지원
+  // 그려서 만들기 & 사진 업로드
   const canvas = document.getElementById('drawCanvas');
   const ctx = canvas.getContext('2d');
   let isDrawing = false;
