@@ -9,24 +9,29 @@
   
   <style>
     * { box-sizing: border-box; font-family: 'Gothic A1', 'Nanum Gothic', sans-serif; }
+    
     body {
       background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 50%, #4ade80 50%, #22c55e 100%);
       margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
     }
-    .main-wrapper { display: flex; gap: 16px; width: 100%; max-width: 980px; }
     
+    .main-wrapper { 
+      display: flex; gap: 16px; width: 100%; max-width: 980px; height: 680px; /* 전체 높이 고정 */
+    }
+    
+    /* 좌측 패널 */
     .left-panel {
       flex: 1.2; background: #fff; border: 3px solid #000; border-radius: 16px; padding: 16px;
-      box-shadow: 4px 4px 0px rgba(0,0,0,0.15); display: flex; flex-direction: column;
+      box-shadow: 4px 4px 0px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow-y: auto;
     }
     .panel-title { font-size: 1.4rem; font-weight: 800; text-align: center; margin: 0 0 12px 0; }
     
     .preview-container { display: flex; gap: 12px; margin-bottom: 12px; }
     .big-avatar-box {
-      width: 120px; height: 120px; background: #e0f2fe; border: 3px solid #000;
+      width: 110px; height: 110px; background: #e0f2fe; border: 3px solid #000;
       border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
     }
-    .big-avatar-box svg, .big-avatar-box img { width: 100px; height: 100px; object-fit: cover; }
+    .big-avatar-box svg, .big-avatar-box img { width: 90px; height: 90px; object-fit: cover; }
     
     .preview-controls { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
     .input-label { font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; }
@@ -50,14 +55,14 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     
-    .custom-select-group { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px; }
+    .custom-select-group { display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; padding-right: 4px; }
     .custom-row { display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 6px 10px; border: 2px solid #000; border-radius: 8px; }
     .custom-row label { font-size: 0.85rem; font-weight: bold; }
     .custom-row select { padding: 4px; border: 2px solid #000; border-radius: 6px; font-weight: bold; }
 
     .grid-box {
       display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
-      background: #f0f9ff; border: 2px solid #000; border-radius: 12px; padding: 8px; max-height: 200px; overflow-y: auto;
+      background: #f0f9ff; border: 2px solid #000; border-radius: 12px; padding: 8px; max-height: 180px; overflow-y: auto;
     }
     .grid-item {
       position: relative; background: #fff; border: 2px solid #000; border-radius: 10px;
@@ -70,14 +75,33 @@
     
     .room-box { background: #f8fafc; border: 2px solid #000; border-radius: 8px; padding: 10px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; }
 
-    .right-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-    .top-status-bar { background: #fff; border: 3px solid #000; border-radius: 10px; padding: 8px 12px; font-weight: bold; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    /* 우측 채팅 패널 - 화면에 보이는 만큼만 고정 */
+    .right-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; height: 100%; }
+    .top-status-bar { background: #fff; border: 3px solid #000; border-radius: 10px; padding: 8px 12px; font-weight: bold; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
     .status-badge { background: #22c55e; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
 
-    .chat-container { flex: 1; background: #fff; border: 3px solid #000; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; }
-    .chat-title { font-size: 1.2rem; font-weight: 800; margin: 0 0 10px 0; }
+    .chat-container { 
+      flex: 1; background: #fff; border: 3px solid #000; border-radius: 12px; padding: 12px; 
+      display: flex; flex-direction: column; min-height: 0; /* 스크롤 고정 핵심 구문 */
+    }
+    .chat-title { font-size: 1.2rem; font-weight: 800; margin: 0 0 10px 0; flex-shrink: 0; }
     
-    .chat-list { flex: 1; overflow-y: auto; height: 320px; display: flex; flex-direction: column; gap: 12px; padding-right: 4px; }
+    /* ⭐ 채팅 스크롤 영역 핵심 설정 ⭐ */
+    .chat-list { 
+      flex: 1; 
+      overflow-y: auto; /* 넘치면 스크롤바 생성 */
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; 
+      padding-right: 6px; 
+      min-height: 0; 
+    }
+
+    /* 커스텀 스크롤바 예쁘게 */
+    .chat-list::-webkit-scrollbar { width: 6px; }
+    .chat-list::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+    .chat-list::-webkit-scrollbar-track { background: #f1f5f9; }
+
     .chat-msg { display: flex; align-items: flex-start; gap: 8px; }
     .chat-msg.self { flex-direction: row-reverse; }
     
@@ -93,9 +117,12 @@
     .msg-bubble { border: 2px solid #000; border-radius: 10px; padding: 8px 12px; font-size: 0.9rem; background: #ffedd5; word-break: break-all; }
     .chat-msg.self .msg-bubble { background: #bae6fd; }
     
-    .chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
+    .chat-input-row { display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; }
 
-    @media (max-width: 768px) { .main-wrapper { flex-direction: column; } }
+    @media (max-width: 768px) { 
+      .main-wrapper { flex-direction: column; height: auto; } 
+      .right-panel { height: 500px; }
+    }
   </style>
 </head>
 <body>
@@ -189,7 +216,7 @@
     </div>
 
     <!-- 방 접속 & 비밀번호 설정 -->
-    <div style="margin-top:10px;">
+    <div style="margin-top:auto; padding-top:10px;">
       <div class="room-box">
         <div style="display:flex; gap:6px;">
           <div style="flex:1;">
@@ -206,7 +233,7 @@
     </div>
   </div>
 
-  <!-- 우측: 실시간 채팅창 -->
+  <!-- 우측: 실시간 채팅창 (스크롤 적용) -->
   <div class="right-panel">
     <div class="top-status-bar">
       <span>현재 방: <b id="currentRoomText" style="color:#2563eb;">1234번 방</b></span>
@@ -215,6 +242,8 @@
 
     <div class="chat-container">
       <h3 class="chat-title">실시간 채팅</h3>
+      
+      <!-- 스크롤 처리되는 채팅 리스트 영역 -->
       <div class="chat-list" id="chatList"></div>
 
       <div class="chat-input-row">
@@ -226,23 +255,19 @@
 </div>
 
 <script>
-  // 공용 실시간 MQTT 웹소켓 서버 접속
+  // 실시간 MQTT 서버
   const mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-  
-  // 내 고유 ID 생성 (내가 보낸 메시지 구분용)
   const myClientId = 'user_' + Math.random().toString(36).substring(2, 9);
   let currentTopic = "";
 
-  // 동물 베이스
   const BASE_ANIMALS = [
     { name: "토끼", body: `<ellipse cx="38" cy="18" rx="7" ry="16" fill="#fff" stroke="#000" stroke-width="3"/><ellipse cx="62" cy="18" rx="7" ry="16" fill="#fff" stroke="#000" stroke-width="3"/><path d="M 22,58 C 20,38 80,38 78,58 C 80,78 20,78 22,58 Z" fill="#fff" stroke="#000" stroke-width="4"/>` },
     { name: "곰", body: `<circle cx="28" cy="30" r="9" fill="#334155" stroke="#000" stroke-width="3"/><circle cx="72" cy="30" r="9" fill="#334155" stroke="#000" stroke-width="3"/><path d="M 20,58 C 18,36 82,36 80,58 C 82,80 18,80 20,58 Z" fill="#334155" stroke="#000" stroke-width="4"/><ellipse cx="50" cy="62" rx="14" ry="10" fill="#f8fafc"/>` },
     { name: "햄스터", body: `<path d="M 20,58 C 18,35 82,35 80,58 C 82,80 18,80 20,58 Z" fill="#f97316" stroke="#000" stroke-width="4"/><path d="M 30,62 C 28,45 72,45 70,62 C 72,78 28,78 30,62 Z" fill="#ffedd5"/>` },
     { name: "강아지", body: `<ellipse cx="20" cy="52" rx="9" ry="16" fill="#fbbf24" stroke="#000" stroke-width="3"/><ellipse cx="80" cy="52" rx="9" ry="16" fill="#fbbf24" stroke="#000" stroke-width="3"/><path d="M 22,58 C 20,38 80,38 78,58 C 80,78 20,78 22,58 Z" fill="#fef08a" stroke="#000" stroke-width="4"/>` },
-    { name: "고양이", body: `<polygon points="22,25 38,45 15,45" fill="#94a3b8" stroke="#000" stroke-width="3"/><polygon points="78,25 62,45 85,45" fill="#94a3b8" stroke="#000" stroke-width="3"/><path d="M 20,58 C 18,38 82,38 80,58 C 82,80 18,80 20,58 Z" fill="#94a3b8" stroke="#000" stroke-width="4"/>` }
+    { name: "고양이", body: `<polygon points="22,25 38,45 15,45" fill="#94a3b8" stroke="#000" stroke-width="3"/><polygon points="78,25 62,45 85,45" fill="#94a3b8" stroke="#000" stroke-width="3"/><path d="M 20,58 C 18,38 82,38 78,58 C 80,78 20,78 22,58 Z" fill="#94a3b8" stroke="#000" stroke-width="4"/>` }
   ];
 
-  // 커스텀 요소 (표정, 모자, 옷, 장신구)
   const FACES = {
     smile: `<circle cx="40" cy="52" r="3.5" fill="#000"/><circle cx="60" cy="52" r="3.5" fill="#000"/><path d="M 45 61 Q 50 66 55 61" stroke="#000" stroke-width="3" fill="none"/>`,
     wink: `<path d="M 35 52 L 45 52" stroke="#000" stroke-width="3"/><circle cx="60" cy="52" r="3.5" fill="#000"/><path d="M 45 61 Q 50 66 55 61" stroke="#000" stroke-width="3" fill="none"/>`,
@@ -285,13 +310,11 @@
     initCanvas();
   };
 
-  // 서버 연결 처리
   mqttClient.on('connect', () => {
     document.getElementById('connBadge').innerText = "🟢 실시간 연결됨";
-    joinRoom(); // 서버 연결 시 기본 방 바로 입장
+    joinRoom();
   });
 
-  // 메시지 수신 이벤트
   mqttClient.on('message', (topic, message) => {
     try {
       const data = JSON.parse(message.toString());
@@ -299,28 +322,21 @@
     } catch(e) { console.error(e); }
   });
 
-  // 방 입장 (방 번호 + 비밀번호 조합으로 보안 채널 생성)
   function joinRoom() {
     const roomNum = document.getElementById('roomInput').value.trim();
     const roomPw = document.getElementById('pwInput').value.trim();
 
-    if (!roomNum) return alert("방 번호를 입력하세요!");
-    if (!roomPw) return alert("비밀번호를 입력하세요!");
+    if (!roomNum || !roomPw) return alert("방 번호와 비밀번호를 모두 입력하세요!");
 
-    // 기존 구독 해제 후 새 방 채널 구독
-    if (currentTopic) {
-      mqttClient.unsubscribe(currentTopic);
-    }
+    if (currentTopic) mqttClient.unsubscribe(currentTopic);
 
-    // 방 번호와 비밀번호를 조합한 고유 주제(Topic) 생성
     currentTopic = `cute_chat_room_${roomNum}_pw_${roomPw}`;
     mqttClient.subscribe(currentTopic);
 
     document.getElementById('currentRoomText').innerText = `${roomNum}번 방`;
-    document.getElementById('chatList').innerHTML = `<div style="text-align:center; color:#64748b; font-size:0.85rem; padding:8px; font-weight:bold;">🔑 ${roomNum}번 방 (비밀번호 적용됨)에 입장했습니다.</div>`;
+    document.getElementById('chatList').innerHTML = `<div style="text-align:center; color:#64748b; font-size:0.85rem; padding:8px; font-weight:bold;">🔑 ${roomNum}번 방에 입장했습니다.</div>`;
   }
 
-  // 메시지 전송
   function sendMsg() {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
@@ -333,7 +349,6 @@
       text: text
     };
 
-    // 실시간 서버로 전송
     mqttClient.publish(currentTopic, JSON.stringify(payload));
     input.value = '';
   }
@@ -353,10 +368,10 @@
       </div>
     `;
     list.appendChild(msg);
+    // 새 메시지가 오면 항상 맨 아래 스크롤로 이동
     list.scrollTop = list.scrollHeight;
   }
 
-  // 캐릭터 커스텀 로직
   function updateCustomAvatar() {
     const base = BASE_ANIMALS[selectedBaseIdx].body;
     const face = FACES[document.getElementById('selFace').value];
@@ -406,7 +421,6 @@
     document.getElementById(`tab-${tab}`).classList.add('active');
   }
 
-  // 그려서 만들기 & 사진 업로드
   const canvas = document.getElementById('drawCanvas');
   const ctx = canvas.getContext('2d');
   let isDrawing = false;
