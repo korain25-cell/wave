@@ -32,20 +32,20 @@
       background-repeat: no-repeat;
     }
 
-    /* 🖼️ 기본 테마들 */
+    /* 🖼️ 테마 별 배경 설정 */
     body.theme-default { background-color: #e0f2fe; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M20 20 a 4 4 0 0 1 0 -8 a 4 4 0 0 1 0 8 M32 20 a 4 4 0 0 1 0 -8 a 4 4 0 0 1 0 8' fill='%23fbbf24' stroke='%23d97706' stroke-width='1.5'/%3E%3Ccircle cx='26' cy='24' r='9' fill='%23fbbf24' stroke='%23d97706' stroke-width='1.5'/%3E%3Ccircle cx='23' cy='22' r='1' fill='%23000'/%3E%3Ccircle cx='29' cy='22' r='1' fill='%23000'/%3E%3Cellipse cx='26' cy='25' rx='3' ry='2' fill='%23fff'/%3E%3Cpath d='M75 18 l2 4 l4 1 l-3 3 l1 4 l-4 -2 l-4 2 l1 -4 l-3 -3 l4 -1 z' fill='%23f43f5e' opacity='0.7'/%3E%3Cpath d='M25 70 Q25 65 30 65 Q35 65 35 70 Q35 75 25 82 Q15 75 15 70 Q15 65 20 65 Q25 65 25 70 Z' fill='%23ec4899' opacity='0.6'/%3E%3Cellipse cx='70' cy='62' rx='3' ry='8' fill='%23fff' stroke='%23cbd5e1' stroke-width='1.5'/%3E%3Cellipse cx='80' cy='62' rx='3' ry='8' fill='%23fff' stroke='%23cbd5e1' stroke-width='1.5'/%3E%3Ccircle cx='75' cy='72' r='8' fill='%23fff' stroke='%23cbd5e1' stroke-width='1.5'/%3E%3Ccircle cx='72' cy='70' r='1' fill='%23000'/%3E%3Ccircle cx='78' cy='70' r='1' fill='%23000'/%3E%3Cellipse cx='50' cy='45' rx='4' ry='3' fill='%2338bdf8' opacity='0.6'/%3E%3Ccircle cx='45' cy='39' r='1.5' fill='%2338bdf8' opacity='0.6'/%3E%3Ccircle cx='50' cy='37' r='1.5' fill='%2338bdf8' opacity='0.6'/%3E%3Ccircle cx='55' cy='39' r='1.5' fill='%2338bdf8' opacity='0.6'/%3E%3C/svg%3E"); background-size: auto; }
     body.theme-pink { background-color: #fce7f3; background-image: radial-gradient(#f472b6 2px, transparent 2px), radial-gradient(#fb7185 2px, #fce7f3 2px); background-size: 50px 50px; background-position: 0 0, 25px 25px; }
     body.theme-green { background-color: #dcfce7; background-image: radial-gradient(#4ade80 2.5px, transparent 2.5px); background-size: 30px 30px; }
     body.theme-night { background-color: #0f172a; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px), radial-gradient(#fef08a 2px, transparent 2px); background-size: 40px 40px, 80px 80px; }
     body.theme-warm { background-color: #fef3c7; background-image: radial-gradient(#f59e0b 2px, transparent 2px); background-size: 26px 26px; }
 
-    /* 메인 컨테이너 */
+    /* 메인 앱 레이아웃 */
     .app-container {
       width: 100%; max-width: 520px; height: 100%; max-height: 860px;
       display: flex; flex-direction: column; gap: 8px; position: relative;
     }
 
-    /* 🔝 상단 컨트롤 바 */
+    /* 🔝 상단 바 */
     .top-bar {
       background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
       border: 3px solid #000; border-radius: 16px; padding: 8px;
@@ -76,7 +76,7 @@
 
     .room-title-text { font-size: 0.8rem; font-weight: 800; color: #1e40af; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* 💬 채팅 창 메인 영역 (배경이미지가 투명하게 비치도록 수정) */
+    /* 💬 채팅 메인 카드 (투명하게 비치도록 수정) */
     .chat-card {
       flex: 1; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(8px);
       border: 3px solid #000; border-radius: 18px; padding: 10px;
@@ -109,7 +109,7 @@
     .custom-input { width: 100%; padding: 8px 10px; border: 2px solid #000; border-radius: 10px; font-size: 0.85rem; outline: none; background: rgba(255, 255, 255, 0.95); }
     .btn-send { background: #2563eb; color: #fff; border: 2px solid #000; border-radius: 10px; font-weight: bold; padding: 0 14px; cursor: pointer; flex-shrink: 0; }
 
-    /* 팝업 모달 공통 */
+    /* 팝업 모달 공통 스타일 */
     .modal-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(2px);
@@ -160,7 +160,7 @@
 
 <div class="app-container">
   
-  <!-- 🔝 상단바 -->
+  <!-- 🔝 상단 바 -->
   <div class="top-bar">
     <div class="top-left-group">
       <div class="my-avatar-btn" onclick="openModal('customModal')" title="캐릭터 변경" id="topAvatarBtn"></div>
@@ -316,7 +316,9 @@
   let activeRooms = new Set();
   let currentTopic = "";
   let currentRoomName = "";
-  let chatHistory = [];
+  
+  // 💡 방별 메시지 기록 저장소 (방이름 -> 메시지 객체 배열)
+  let roomMessagesStore = {}; 
   let deferredPrompt = null;
 
   const BASE_ANIMALS = [
@@ -415,7 +417,25 @@
         else if (data.type === 'SYNC_ROOMS') { data.rooms.forEach(r => activeRooms.add(r)); renderRoomList(); }
         return;
       }
-      renderMessage(data.user, data.avatar, data.text, data.time, data.senderId === myClientId);
+      
+      // 해당 방의 메시지 수신 시 로컬 메모리에 보존
+      const msgObj = {
+        user: data.user,
+        avatar: data.avatar,
+        text: data.text,
+        time: data.time,
+        senderId: data.senderId
+      };
+
+      if (!roomMessagesStore[data.roomName]) {
+        roomMessagesStore[data.roomName] = [];
+      }
+      roomMessagesStore[data.roomName].push(msgObj);
+
+      // 현재 사용자가 보고 있는 방의 메시지라면 화면에 표시
+      if (data.roomName === currentRoomName) {
+        renderMessage(data.user, data.avatar, data.text, data.time, data.senderId === myClientId);
+      }
     } catch(e) {}
   });
 
@@ -433,16 +453,31 @@
   }
 
   function joinRoom(roomName) {
+    // 💡 이미 같은 방에 접속 중인 경우 내역을 지우지 않고 모달만 닫음
+    if (currentRoomName === roomName) {
+      closeModal('roomListModal');
+      return;
+    }
+
     if (currentTopic) mqttClient.unsubscribe(currentTopic);
 
     currentRoomName = roomName;
     currentTopic = `cute_chat_room_${encodeURIComponent(roomName)}`;
     mqttClient.subscribe(currentTopic);
 
-    chatHistory = [];
     document.getElementById('topRoomText').innerText = roomName;
     document.getElementById('chatHeaderTitle').innerText = `💬 [${roomName}] 대화창`;
-    document.getElementById('chatList').innerHTML = `<div style="text-align:center; color:#1e293b; font-weight:bold; font-size:0.8rem; padding:8px; text-shadow:0px 0px 4px rgba(255,255,255,0.8);">🏠 [${escapeHtml(roomName)}] 방에 입장하셨습니다.</div>`;
+    
+    const chatList = document.getElementById('chatList');
+    chatList.innerHTML = `<div style="text-align:center; color:#1e293b; font-weight:bold; font-size:0.8rem; padding:8px; text-shadow:0px 0px 4px rgba(255,255,255,0.8);">🏠 [${escapeHtml(roomName)}] 방에 입장하셨습니다.</div>`;
+
+    // 💡 방별 메시지 기록이 있는 경우 복원하여 화면에 다시 그림
+    if (roomMessagesStore[roomName] && roomMessagesStore[roomName].length > 0) {
+      roomMessagesStore[roomName].forEach(msg => {
+        renderMessage(msg.user, msg.avatar, msg.text, msg.time, msg.senderId === myClientId);
+      });
+    }
+
     closeModal('roomListModal');
   }
 
@@ -486,7 +521,7 @@
 
     const timeStr = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
     mqttClient.publish(currentTopic, JSON.stringify({
-      senderId: myClientId, user: myName, avatar: currentAvatar, text: text, time: timeStr
+      roomName: currentRoomName, senderId: myClientId, user: myName, avatar: currentAvatar, text: text, time: timeStr
     }));
     input.value = '';
   }
@@ -506,13 +541,16 @@
     `;
     list.appendChild(msg);
     list.scrollTop = list.scrollHeight;
-    chatHistory.push(`[${time || '시간미상'}] ${user}: ${text}`);
   }
 
   function downloadChatLog() {
     if (!currentRoomName) return alert("선택된 방이 없습니다.");
-    if (chatHistory.length === 0) return alert("대화 내역이 없습니다.");
-    const content = `=== ${currentRoomName} 기록 ===\n\n` + chatHistory.join('\n');
+    const history = roomMessagesStore[currentRoomName] || [];
+    if (history.length === 0) return alert("대화 내역이 없습니다.");
+    
+    const content = `=== ${currentRoomName} 기록 ===\n\n` + 
+      history.map(m => `[${m.time || '시간미상'}] ${m.user}: ${m.text}`).join('\n');
+      
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
